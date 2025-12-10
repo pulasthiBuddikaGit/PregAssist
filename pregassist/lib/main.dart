@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-// Import the common home screen
-import 'screens/common/home_screen.dart';
-// Import your specific screens
-import 'screens/nisalka/nisalka_dashboard.dart';
+
+// 1. Import the Wrapper (The Container for your tabs)
+import 'screens/common/main_wrapper.dart';
+
+// 2. Import "Deep" screens (Pages that hide the navbar)
+import 'screens/nisalka/diagnosis_screen.dart';
+// import 'screens/Teammate1/some_other_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,23 +19,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PregAssist',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      // This is the entry route (like index.js/App.js logic)
-      initialRoute: '/', 
+      theme: ThemeData(primarySwatch: Colors.blue),
       
-      // THE ROUTING TABLE
+      // A. THE ENTRY POINT
+      // Instead of HomeScreen, we load the Wrapper which holds the Navbar
+      initialRoute: '/', 
+
+      // B. THE ROUTE TABLE
       routes: {
-        // When the app asks for '/', show the HomeScreen
-        '/': (context) => const HomeScreen(),
+        // The Root: Loads the Bottom Nav Bar setup
+        '/': (context) => const MainWrapper(),
+
+        // Deep Screen: When you go here, the Bottom Bar disappears
+        '/diagnosis': (context) => const DiagnosisScreen(),
         
-        // When the app asks for '/nisalka', show your page
-        '/nisalka': (context) => const NisalkaDashboard(),
-        
-        // Add other teammates here later:
-        // '/teammate1': (context) => const TeammatePage(),
+        // Add other standalone screens here
+        // '/login': (context) => const LoginScreen(),
       },
     );
   }
