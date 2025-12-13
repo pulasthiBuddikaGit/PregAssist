@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'diagnosis_result_screen.dart';
 
-// IMPORTANT: This import path matches your file structure screenshot
+// IMPORTANT: This import path matches your file structure
 import '../../services/expert_system.dart'; 
 
 class DiagnosisWizard extends StatefulWidget {
@@ -82,8 +82,6 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     }
 
     // --- 1. HARDCODED VITALS ---
-    // These simulate data coming from your other model.
-    // Try changing these to test! (e.g., sbp: 150 for Preeclampsia)
     Map<String, dynamic> patientData = {
       'BP_Systolic': 120,    
       'BP_Diastolic': 80,    
@@ -93,9 +91,6 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     };
 
     // --- 2. ADD USER ANSWERS TO DATA ---
-    // The user's answers (0, 1, 2) map directly to the Expert System logic
-    // Index 0=Headache, 1=Visual, 2=Bleeding, 3=Pain, 4=Discharge, 5=Fluid
-    
     patientData['Headache'] = _selectedAnswers[0];
     patientData['VisualDisturbance'] = _selectedAnswers[1];
     patientData['HeavyBleeding'] = _selectedAnswers[2];
@@ -126,34 +121,52 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Assessment (${_currentIndex + 1}/${_questions.length})"),
-        backgroundColor: Colors.purple[50],
+    // 1. Wrap everything in a Container to hold the Gradient
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF3E5F5), // Light Purple/Lavender (Top)
+            Colors.white,      // White (Bottom)
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          // Progress Bar
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / _questions.length,
-            backgroundColor: Colors.grey[200],
-            color: Colors.purple,
-            minHeight: 6,
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Disable swipe
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-              itemCount: _questions.length,
-              itemBuilder: (context, index) {
-                return _buildQuestionCard(index);
-              },
+      child: Scaffold(
+        // 2. Make Scaffold transparent so gradient shows through
+        backgroundColor: Colors.transparent,
+        
+        appBar: AppBar(
+          title: Text("Assessment (${_currentIndex + 1}/${_questions.length})"),
+          // 3. Make AppBar transparent and remove shadow
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            // Progress Bar
+            LinearProgressIndicator(
+              value: (_currentIndex + 1) / _questions.length,
+              backgroundColor: Colors.white.withOpacity(0.5), // Semi-transparent white
+              color: const Color.fromARGB(255, 108, 79, 113),
+              minHeight: 6,
             ),
-          ),
-        ],
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Disable swipe
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                itemCount: _questions.length,
+                itemBuilder: (context, index) {
+                  return _buildQuestionCard(index);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -171,10 +184,10 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
           // Symptom Title
           Text(
             questionData['title'],
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14, 
               fontWeight: FontWeight.bold, 
-              color: Colors.purple[300],
+              color: Color.fromARGB(255, 108, 79, 113), // Matches your theme color
               letterSpacing: 1.2
             ),
             textAlign: TextAlign.center,
@@ -184,7 +197,7 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
           // Question Text
           Text(
             questionData['question'],
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
@@ -204,11 +217,12 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                   Future.delayed(const Duration(milliseconds: 250), _nextPage);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isSelected ? Colors.purple : Colors.white,
+                  // Use your custom purple for selected state
+                  backgroundColor: isSelected ? const Color.fromARGB(255, 82, 13, 94) : Colors.white,
                   foregroundColor: isSelected ? Colors.white : Colors.black87,
                   elevation: isSelected ? 4 : 1,
                   side: BorderSide(
-                    color: isSelected ? Colors.purple : Colors.grey.shade300,
+                    color: isSelected ? const Color.fromARGB(255, 82, 13, 94) : Colors.grey.shade300,
                     width: isSelected ? 2 : 1,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -219,7 +233,7 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                 child: Text(
                   options[optionIndex],
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
