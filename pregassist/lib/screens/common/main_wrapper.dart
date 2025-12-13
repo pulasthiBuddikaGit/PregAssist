@@ -48,7 +48,7 @@ class _MainWrapperState extends State<MainWrapper> {
           //   label: 'Physical',
           // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book), // Or whatever icon fits your feature
+            icon: Icon(Icons.book),
             label: 'Emergency',
           ),
           BottomNavigationBarItem(

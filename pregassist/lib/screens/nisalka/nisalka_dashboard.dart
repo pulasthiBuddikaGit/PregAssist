@@ -31,7 +31,7 @@ class NisalkaDashboard extends StatelessWidget {
               onPressed: () {
                 // This triggers the route defined in main.dart
                 // The Bottom Navigation Bar will disappear on the new screen
-                Navigator.pushNamed(context, '/diagnosis');
+                Navigator.pushNamed(context, '/EmergencyDiagnosis');
               },
             ),
           ],
