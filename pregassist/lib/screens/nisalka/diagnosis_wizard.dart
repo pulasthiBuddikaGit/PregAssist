@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'diagnosis_result_screen.dart';
 
-// IMPORTANT: This import path matches your file structure screenshot
+// IMPORTANT: This import path matches your file structure
 import '../../services/expert_system.dart'; 
 
 class DiagnosisWizard extends StatefulWidget {
@@ -82,8 +82,6 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     }
 
     // --- 1. HARDCODED VITALS ---
-    // These simulate data coming from your other model.
-    // Try changing these to test! (e.g., sbp: 150 for Preeclampsia)
     Map<String, dynamic> patientData = {
       'BP_Systolic': 120,    
       'BP_Diastolic': 80,    
@@ -93,9 +91,6 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     };
 
     // --- 2. ADD USER ANSWERS TO DATA ---
-    // The user's answers (0, 1, 2) map directly to the Expert System logic
-    // Index 0=Headache, 1=Visual, 2=Bleeding, 3=Pain, 4=Discharge, 5=Fluid
-    
     patientData['Headache'] = _selectedAnswers[0];
     patientData['VisualDisturbance'] = _selectedAnswers[1];
     patientData['HeavyBleeding'] = _selectedAnswers[2];
@@ -126,34 +121,64 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Assessment (${_currentIndex + 1}/${_questions.length})"),
-        backgroundColor: Colors.purple[50],
+    // 1. Wrap everything in a Container to hold the Gradient
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          
+          // 1. Add your 3 colors here
+          colors: [
+            Color(0xFFEFF6FF),  // Top (Light Purple)
+            Color(0xFFFAF5FF),  // Middle (I added Purple 100 as an example)
+            Color(0xFFDBEAFE),       // Bottom (White)
+          ],
+          
+          // 2. Control where the colors sit (0.0 to 1.0)
+          stops: [0.0, 0.5, 1.0], 
+        ),
       ),
-      body: Column(
-        children: [
-          // Progress Bar
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / _questions.length,
-            backgroundColor: Colors.grey[200],
-            color: Colors.purple,
-            minHeight: 6,
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Disable swipe
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-              itemCount: _questions.length,
-              itemBuilder: (context, index) {
-                return _buildQuestionCard(index);
-              },
+      child: Scaffold(
+        // 2. Make Scaffold transparent so gradient shows through
+        backgroundColor: Colors.transparent,
+        
+        appBar: AppBar(
+          title: Text("Question ${_currentIndex + 1} of ${_questions.length}"
+          ,style: const TextStyle(
+              fontSize: 16, 
+              fontWeight: FontWeight.bold, 
+              color: Color.fromARGB(255, 26, 0, 128), // Matches your theme color
+              letterSpacing: 1.2
+            ),),
+          // 3. Make AppBar transparent and remove shadow
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            // Progress Bar
+            LinearProgressIndicator(
+              value: (_currentIndex + 1) / _questions.length,
+              backgroundColor: const Color.fromARGB(86, 43, 128, 255), // Semi-transparent white
+              color: const Color.fromARGB(255, 43, 128, 255),
+              minHeight: 5,
             ),
-          ),
-        ],
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Disable swipe
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                itemCount: _questions.length,
+                itemBuilder: (context, index) {
+                  return _buildQuestionCard(index);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -163,33 +188,66 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     final options = questionData['options'] as List<String>;
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(19.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Symptom Title
-          Text(
-            questionData['title'],
-            style: TextStyle(
-              fontSize: 14, 
-              fontWeight: FontWeight.bold, 
-              color: Colors.purple[300],
-              letterSpacing: 1.2
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
           
-          // Question Text
-          Text(
-            questionData['question'],
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+          // --- NEW QUESTION BOX WITH GRADIENT ---
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              // Diagonal (Rotated) Gradient
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF51A2FF),
+                  Color(0xFF00D2F2),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                // Symptom Title
+                Text(
+                  questionData['title'],
+                  style: const TextStyle(
+                    fontSize: 15, 
+                    fontWeight: FontWeight.bold, 
+                    color: Color.fromARGB(255, 228, 228, 228), // Light text for contrast
+                    letterSpacing: 1.2
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                
+                // Question Text
+                Text(
+                  questionData['question'],
+                  style: const TextStyle(
+                    fontSize: 17, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, // White text for contrast
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 40),
+          
+          const SizedBox(height: 30),
 
-          // Options Buttons (0, 1, 2)
+          // Options Buttons (Remains Exactly the Same)
           ...List.generate(3, (optionIndex) {
             bool isSelected = _selectedAnswers[index] == optionIndex;
             
@@ -204,14 +262,11 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                   Future.delayed(const Duration(milliseconds: 250), _nextPage);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isSelected ? Colors.purple : Colors.white,
-                  foregroundColor: isSelected ? Colors.white : Colors.black87,
+                  // Use your custom purple for selected state
+                  backgroundColor: isSelected ? Color.fromARGB(255, 73, 182, 255) : const Color.fromARGB(255, 255, 255, 255),
+                  foregroundColor: isSelected ? Colors.white : const Color.fromARGB(221, 0, 0, 0),
                   elevation: isSelected ? 4 : 1,
-                  side: BorderSide(
-                    color: isSelected ? Colors.purple : Colors.grey.shade300,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -219,7 +274,7 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                 child: Text(
                   options[optionIndex],
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
