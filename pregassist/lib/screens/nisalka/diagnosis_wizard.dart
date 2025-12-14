@@ -127,10 +127,16 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
+          
+          // 1. Add your 3 colors here
           colors: [
-            Color(0xFFF3E5F5), // Light Purple/Lavender (Top)
-            Colors.white,      // White (Bottom)
+            Color(0xFFEFF6FF),  // Top (Light Purple)
+            Color(0xFFFAF5FF),  // Middle (I added Purple 100 as an example)
+            Color(0xFFDBEAFE),       // Bottom (White)
           ],
+          
+          // 2. Control where the colors sit (0.0 to 1.0)
+          stops: [0.0, 0.5, 1.0], 
         ),
       ),
       child: Scaffold(
@@ -138,7 +144,13 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
         backgroundColor: Colors.transparent,
         
         appBar: AppBar(
-          title: Text("Assessment (${_currentIndex + 1}/${_questions.length})"),
+          title: Text("Question ${_currentIndex + 1} of ${_questions.length}"
+          ,style: const TextStyle(
+              fontSize: 16, 
+              fontWeight: FontWeight.bold, 
+              color: Color.fromARGB(255, 26, 0, 128), // Matches your theme color
+              letterSpacing: 1.2
+            ),),
           // 3. Make AppBar transparent and remove shadow
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -148,9 +160,9 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
             // Progress Bar
             LinearProgressIndicator(
               value: (_currentIndex + 1) / _questions.length,
-              backgroundColor: Colors.white.withOpacity(0.5), // Semi-transparent white
-              color: const Color.fromARGB(255, 108, 79, 113),
-              minHeight: 6,
+              backgroundColor: const Color.fromARGB(86, 43, 128, 255), // Semi-transparent white
+              color: const Color.fromARGB(255, 43, 128, 255),
+              minHeight: 5,
             ),
             Expanded(
               child: PageView.builder(
@@ -176,33 +188,66 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     final options = questionData['options'] as List<String>;
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(19.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Symptom Title
-          Text(
-            questionData['title'],
-            style: const TextStyle(
-              fontSize: 14, 
-              fontWeight: FontWeight.bold, 
-              color: Color.fromARGB(255, 108, 79, 113), // Matches your theme color
-              letterSpacing: 1.2
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
           
-          // Question Text
-          Text(
-            questionData['question'],
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+          // --- NEW QUESTION BOX WITH GRADIENT ---
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              // Diagonal (Rotated) Gradient
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF51A2FF),
+                  Color(0xFF00D2F2),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                // Symptom Title
+                Text(
+                  questionData['title'],
+                  style: const TextStyle(
+                    fontSize: 15, 
+                    fontWeight: FontWeight.bold, 
+                    color: Color.fromARGB(255, 228, 228, 228), // Light text for contrast
+                    letterSpacing: 1.2
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                
+                // Question Text
+                Text(
+                  questionData['question'],
+                  style: const TextStyle(
+                    fontSize: 17, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, // White text for contrast
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 40),
+          
+          const SizedBox(height: 30),
 
-          // Options Buttons (0, 1, 2)
+          // Options Buttons (Remains Exactly the Same)
           ...List.generate(3, (optionIndex) {
             bool isSelected = _selectedAnswers[index] == optionIndex;
             
@@ -218,14 +263,10 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                 },
                 style: ElevatedButton.styleFrom(
                   // Use your custom purple for selected state
-                  backgroundColor: isSelected ? const Color.fromARGB(255, 82, 13, 94) : Colors.white,
-                  foregroundColor: isSelected ? Colors.white : Colors.black87,
+                  backgroundColor: isSelected ? Color.fromARGB(255, 73, 182, 255) : const Color.fromARGB(255, 255, 255, 255),
+                  foregroundColor: isSelected ? Colors.white : const Color.fromARGB(221, 0, 0, 0),
                   elevation: isSelected ? 4 : 1,
-                  side: BorderSide(
-                    color: isSelected ? const Color.fromARGB(255, 82, 13, 94) : Colors.grey.shade300,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

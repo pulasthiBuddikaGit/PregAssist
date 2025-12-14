@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class NisalkaDashboard extends StatelessWidget {
-  const NisalkaDashboard({super.key});
+class EmergencyDashboard extends StatelessWidget {
+  const EmergencyDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {

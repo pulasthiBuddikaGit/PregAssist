@@ -13,49 +13,77 @@ class DiagnosisResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. Determine status color and icon
-    Color statusColor;
+    
     IconData statusIcon;
     bool isNormal = diagnosis.contains("Normal") || diagnosis.contains("Low Risk");
-
     if (isNormal) {
-      statusColor = Colors.green;
       statusIcon = Icons.check_circle;
     } else {
-      statusColor = Colors.orange.shade800;
       statusIcon = Icons.warning_amber_rounded;
     }
+    // --- LOGIC FOR THE NEW ACTION BOX (Updated for 4 Results) ---
+    String actionText;
+    String actionImage;
+    VoidCallback actionTap;
 
-    // 2. Define the Gradient Colors based on the status
-    // We use a light opacity version of the status color for the top, fading to white at bottom.
-    Color gradientTop = statusColor.withOpacity(0.25);
-    Color gradientBottom = Colors.white;
-    // If it's high risk, maybe fade to a very light tint instead of pure white for more drama
-    if (!isNormal) {
-       gradientBottom = statusColor.withOpacity(0.05);
+    if (diagnosis.contains("Preterm Labor")) {
+      // RESULT 1: Preterm Labor
+      actionText = "AR Emergency Training for Pretrm Labor";
+      actionImage = "assets/preterm_labour.png"; 
+      actionTap = () { print("Navigate to Hospital Maps"); };
+
+    } else if (diagnosis.contains("Preeclampsia")) {
+      // RESULT 2: Preeclampsia
+      actionText = "AR Emergency Training for Preeclampsia";
+      actionImage = "assets/preeclampsia.png"; 
+      actionTap = () { print("Navigate to BP Tool or Call"); };
+
+    } else if (diagnosis.contains("Sepsis")) {
+      // RESULT 3: Sepsis
+      actionText = "AR Emergency Training for Sepsis";
+      actionImage = "assets/sepsis.png"; 
+      actionTap = () { print("Call Emergency"); };
+
+    } else if (diagnosis.contains("Hemorrhage")) {
+      // RESULT 4: Hemorrhage
+      actionText = "AR Emergency Training for Hemorrhage";
+      actionImage = "assets/hemorrhage.png"; 
+      actionTap = () { print("Call Ambulance Now"); };
+
+    } else {
+      // Fallback (Normal / Low Risk)
+      actionText = "View Wellness Plan";
+      actionImage = "assets/food.jpg"; 
+      actionTap = () { print("Navigate to Diet"); };
     }
 
 
-    // 3. Wrap Scaffold in a Container with BoxDecoration
+    // 2. Define the Main Background Gradient Colors
+    Color gradientTop = const Color(0xFFEFF6FF);
+    Color gradientMiddle = const Color(0xFFFAF5FF);
+    Color gradientBottom = const Color(0xFFDBEAFE);
+
+    // 3. Wrap Scaffold in a Container
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [gradientTop, gradientBottom],
-          // Optional: Adjust stops to control where the gradient changes
-          // stops: const [0.0, 0.7], 
+          colors: [gradientTop, gradientMiddle, gradientBottom],
         ),
       ),
       child: Scaffold(
-        // 4. IMPORTANT: Make Scaffold and AppBar transparent so gradient shows
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: const Text("Diagnosis Results"),
           backgroundColor: Colors.transparent,
-          elevation: 0, // Remove shadow to make it blend seamlessly
-          // Ensure back arrow is visible on lighter backgrounds
-          iconTheme: IconThemeData(color: statusColor),
-          titleTextStyle: TextStyle(color: statusColor, fontSize: 20, fontWeight: FontWeight.bold),
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Color(0xFF000000)),
+          titleTextStyle: const TextStyle(
+            color: Color.fromARGB(255, 26, 0, 128),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         body: Center(
           child: SingleChildScrollView(
@@ -63,90 +91,173 @@ class DiagnosisResultScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Big Icon
-                Icon(statusIcon, size: 100, color: statusColor),
-                const SizedBox(height: 20),
-
-                // Diagnosis Title
-                const Text(
-                  "PREDICTED RISK:",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey, // Grey looks okay, or use statusColor.withOpacity(0.7)
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  diagnosis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Reasoning Box
+                
+                // --- MAIN INFO BOX ---
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    // Make the box background slightly whiter than the gradient so it pops out
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: statusColor.withOpacity(0.5)),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFFF637E), // Pink-ish
+                        Color(0xFFFF8904), // Orange-ish
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: statusColor.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: const Color.fromARGB(55, 255, 99, 125),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
                       )
-                    ]
+                    ],
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Icon(statusIcon, size: 50, color: const Color(0xFFFFFFFF)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "PREDICTED RISK:",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white70,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        diagnosis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFFFFFF),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Divider(color: Colors.white.withOpacity(0.3)),
+                      const SizedBox(height: 15),
                       Row(
                         children: [
-                          Icon(Icons.info_outline, size: 20, color: statusColor),
+                          const Icon(Icons.info_outline, size: 16, color: Color(0xFFFFFFFF)),
                           const SizedBox(width: 8),
-                          Text(
+                          const Text(
                             "Why this result?",
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: statusColor,
+                              color: Color(0xFFFFFFFF),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        reasoning,
-                        style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.black87),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          reasoning,
+                          style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
-                // Home Button
+                // --- NEW ACTION BOX (Dynamic based on 4 Results) ---
+                Container(
+                  height: 100, 
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.grey[300], // Fallback color if image fails
+                    image: DecorationImage(
+                      image: AssetImage(actionImage), 
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.5), 
+                        BlendMode.darken
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromARGB(121, 1, 106, 226),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      )
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: actionTap,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "RECOMMENDED ACTION",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    actionText,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                              ),
+                              child: const Icon(Icons.arrow_forward, color: Colors.black),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 120),
+
+                // --- HOME BUTTON ---
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.home),
                     label: const Text("Back to Home"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: statusColor, // Button color matches status
-                      foregroundColor: Colors.white, // Text color
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))
+                      backgroundColor: const Color(0xFFFFFFFF),
+                      foregroundColor: const Color(0xFF193CB8),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: const TextStyle(fontSize: 15),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.of(context).popUntil((route) => route.isFirst);
