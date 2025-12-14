@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
               title: const Text("Logout", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
               onTap: () {
                 // Add logout logic here later
-                print("User logged out");
+                
               },
             ),
           ],
