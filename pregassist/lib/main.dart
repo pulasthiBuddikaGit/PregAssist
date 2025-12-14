@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'screens/common/main_wrapper.dart';
 
 // 2. Import "Deep" screens (Pages that hide the navbar)
-import 'screens/nisalka/diagnosis_screen.dart';
-// import 'screens/Teammate1/some_other_screen.dart';
+import 'screens/nisalka/diagnosis_wizard.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const MainWrapper(),
 
         // Deep Screen: When you go here, the Bottom Bar disappears
-        '/diagnosis': (context) => const DiagnosisScreen(),
+        '/EmergencyDiagnosis': (context) => const DiagnosisWizard(),
         
         // Add other standalone screens here
         // '/login': (context) => const LoginScreen(),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart'; // Import the common home
-import '../Nisalka/nisalka_dashboard.dart'; 
+import '../nisalka/emergency_dashboard.dart'; 
 import 'profile_screen.dart';
 
 class MainWrapper extends StatefulWidget {
@@ -17,7 +17,7 @@ class _MainWrapperState extends State<MainWrapper> {
   final List<Widget> _pages = [
     const HomeScreen(),         // Index 0: Home
     // const Physical()            Index 1: Physical health
-    const NisalkaDashboard(),   // Index 2: Emergencies
+    const EmergencyDashboard(),   // Index 2: Emergencies
     const ProfileScreen(),      // Index 3: profile 
   ];
 
@@ -48,7 +48,7 @@ class _MainWrapperState extends State<MainWrapper> {
           //   label: 'Physical',
           // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book), // Or whatever icon fits your feature
+            icon: Icon(Icons.book),
             label: 'Emergency',
           ),
           BottomNavigationBarItem(
