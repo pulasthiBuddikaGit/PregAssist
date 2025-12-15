@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
               ),
               // Rounded Corners (Bottom only)
               borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(20),
+                bottom: Radius.circular(25),
               ),
             ),
           ),
@@ -56,7 +56,7 @@ class HomeScreen extends StatelessWidget {
 
           // UPDATED: Adjusted logo container
           leading: Padding(
-            padding: const EdgeInsets.only(left: 10.0), 
+            padding: const EdgeInsets.only(left: 12.0), 
             child: Image.asset(
               'assets/logo.png',
               fit: BoxFit.contain, 
