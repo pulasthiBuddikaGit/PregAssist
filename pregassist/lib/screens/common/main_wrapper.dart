@@ -64,13 +64,13 @@ class _MainWrapperState extends State<MainWrapper> {
                 label: 'Home',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.book),
-                activeIcon: GradientIcon(Icons.book),
-                label: 'Emergency',
+                icon: Icon(Icons.medical_information),
+                activeIcon: GradientIcon(Icons.medical_information),
+                label: 'Training',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                activeIcon: GradientIcon(Icons.person),
+                icon: Icon(Icons.woman),
+                activeIcon: GradientIcon(Icons.woman),
                 label: 'Profile',
               ),
             ],
