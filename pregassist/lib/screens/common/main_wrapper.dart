@@ -36,11 +36,12 @@ class _MainWrapperState extends State<MainWrapper> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.purple, // App theme color
+        selectedItemColor: Color.fromARGB(255, 59, 1, 134),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
+            activeIcon: GradientIcon(Icons.home), // <--- Added Gradient Here
             label: 'Home',
           ),
           // BottomNavigationBarItem(
@@ -49,15 +50,42 @@ class _MainWrapperState extends State<MainWrapper> {
           // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
+            activeIcon: GradientIcon(Icons.book), // <--- Added Gradient Here
             label: 'Emergency',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
+            activeIcon: GradientIcon(Icons.person), // <--- Added Gradient Here
             label: 'Profile',
           ),
-          
         ],
       ),
+    );
+  }
+}
+
+// --- Helper Class for Gradient Icons ---
+class GradientIcon extends StatelessWidget {
+  final IconData icon;
+  final double size;
+
+  const GradientIcon(this.icon, {super.key, this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2B80FF),
+            Color(0xFFAC46FF),
+          ],
+        ).createShader(bounds);
+      },
+      blendMode: BlendMode.srcIn,
+      child: Icon(icon, size: size),
     );
   }
 }
