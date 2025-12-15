@@ -263,8 +263,8 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
                 },
                 style: ElevatedButton.styleFrom(
                   // Use your custom purple for selected state
-                  backgroundColor: isSelected ? Color.fromARGB(255, 73, 182, 255) : const Color.fromARGB(255, 255, 255, 255),
-                  foregroundColor: isSelected ? Colors.white : const Color.fromARGB(221, 0, 0, 0),
+                  backgroundColor: isSelected ? Color(0xFF49B6FF) : const Color(0xFFFFFFFF),
+                  foregroundColor: isSelected ? Colors.white : const Color(0xDD000000),
                   elevation: isSelected ? 4 : 1,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
