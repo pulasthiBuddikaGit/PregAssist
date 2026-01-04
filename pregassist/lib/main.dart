@@ -1,17 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// 1. Import the Wrapper (The Container for your tabs)
+// Protected shells / existing screens
 import 'screens/common/main_wrapper.dart';
 
-// 2. Import "Deep" screens (Pages that hide the navbar)
-import 'screens/nisalka/diagnosis_wizard.dart';
+// You already have these:
+import 'screens/pulasthi/ctg_segment_screen.dart';
+import 'models/pulasthi/assessment_data.dart';
+
+// New public flow screens (create these files below)
+import 'screens/public/welcome_screen.dart';
+import 'screens/public/doctor_register_screen.dart';
+import 'screens/public/mother_register_screen.dart';
+import 'screens/public/login_screen.dart';
+
+// New doctor area (placeholder screen below)
+import 'screens/pulasthi/doctor_panel_screen.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+/// -------------------------
+/// Simple Offline Session API
+/// -------------------------
+class AuthSession {
+  final bool isLoggedIn;
+  final String? role; // 'doctor' | 'mother'
+
+  AuthSession({required this.isLoggedIn, required this.role});
+}
+
+class AuthLocal {
+  static const _kLoggedIn = 'isLoggedIn';
+  static const _kRole = 'role';
+
+  static Future<AuthSession> getSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool(_kLoggedIn) ?? false;
+    final role = prefs.getString(_kRole);
+    return AuthSession(isLoggedIn: isLoggedIn, role: role);
+  }
+
+  static Future<void> setSession({required bool isLoggedIn, required String role}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kLoggedIn, isLoggedIn);
+    await prefs.setString(_kRole, role);
+  }
+
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kLoggedIn);
+    await prefs.remove(_kRole);
+  }
+}
+
+/// -------------------------
+/// App
+/// -------------------------
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // Keep one shared instance for CTG screens
+  final AssessmentData _assessmentData = AssessmentData();
 
   @override
   Widget build(BuildContext context) {
@@ -19,22 +75,141 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PregAssist',
       theme: ThemeData(primarySwatch: Colors.blue),
-      
-      // A. THE ENTRY POINT
-      // Instead of HomeScreen, we load the Wrapper which holds the Navbar
-      initialRoute: '/', 
 
-      // B. THE ROUTE TABLE
+      // Always start at Gate
+      initialRoute: '/',
+
+      // Public routes (no guard needed)
       routes: {
-        // The Root: Loads the Bottom Nav Bar setup
-        '/': (context) => const MainWrapper(),
+        '/': (context) => const AuthGate(),
+        '/welcome': (context) => const WelcomeScreen(),
+        '/register/doctor': (context) => const DoctorRegisterScreen(),
+        '/register/mother': (context) => const MotherRegisterScreen(),
 
-        // Deep Screen: When you go here, the Bottom Bar disappears
-        '/EmergencyDiagnosis': (context) => const DiagnosisWizard(),
-        
-        // Add other standalone screens here
-        // '/login': (context) => const LoginScreen(),
+        // Login is public; after login we redirect based on role
+        '/login': (context) => const LoginScreen(),
       },
+
+      // Guard protected routes here:
+      onGenerateRoute: (settings) {
+        final name = settings.name ?? '';
+
+        // PROTECTED: everything under /app/*
+        final isProtected = name.startsWith('/app/');
+
+        if (!isProtected) return null; // let `routes:` handle
+
+        // We return a guarded route that decides where to go
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) {
+            return FutureBuilder<AuthSession>(
+              future: AuthLocal.getSession(),
+              builder: (context, snap) {
+                if (!snap.hasData) {
+                  return const _Splash();
+                }
+
+                final session = snap.data!;
+                final role = session.role;
+
+                // Not logged in -> kick to welcome
+                if (!session.isLoggedIn || role == null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/welcome', (_) => false);
+                  });
+                  return const _Splash();
+                }
+
+                // Role-based route protection:
+                final isDoctorRoute = name.startsWith('/app/doctor');
+                final isMotherRoute = name.startsWith('/app/mother');
+
+                if (isDoctorRoute && role != 'doctor') {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/app/mother', (_) => false);
+                  });
+                  return const _Splash();
+                }
+
+                if (isMotherRoute && role != 'mother') {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/app/doctor', (_) => false);
+                  });
+                  return const _Splash();
+                }
+
+                // ✅ Allowed -> return actual protected screen
+                switch (name) {
+                  case '/app/mother':
+                    return MainWrapper(data: _assessmentData); // mother area shell
+                  case '/app/doctor':
+                    return const DoctorPanelScreen();
+                  case '/app/doctor/ctg':
+                    return CTGSegmentScreen(data: _assessmentData);
+                  default:
+                    return const _NotFound();
+                }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Gate: decides initial screen based on local session
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<AuthSession>(
+      future: AuthLocal.getSession(),
+      builder: (context, snap) {
+        if (!snap.hasData) return const _Splash();
+
+        final session = snap.data!;
+        if (!session.isLoggedIn || session.role == null) {
+          // Not logged in -> public flow
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushNamedAndRemoveUntil(context, '/welcome', (_) => false);
+          });
+          return const _Splash();
+        }
+
+        // Logged in -> role-based home
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final role = session.role;
+          final target = (role == 'doctor') ? '/app/doctor' : '/app/mother';
+          Navigator.pushNamedAndRemoveUntil(context, target, (_) => false);
+        });
+
+        return const _Splash();
+      },
+    );
+  }
+}
+
+class _Splash extends StatelessWidget {
+  const _Splash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _NotFound extends StatelessWidget {
+  const _NotFound();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Route not found')),
     );
   }
 }
