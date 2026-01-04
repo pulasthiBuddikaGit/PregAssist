@@ -4,11 +4,12 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.9.2
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
@@ -17,7 +18,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-# Add this section:
   assets:
     - assets/
