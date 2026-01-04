@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import './diagnosis_wizard.dart';
+
 class EmergencyDashboard extends StatelessWidget {
   const EmergencyDashboard({super.key});
 
@@ -89,17 +91,20 @@ class EmergencyDashboard extends StatelessWidget {
               const SizedBox(height: 20), // Adds space between text and button
               
               ElevatedButton.icon(
-                icon: const Icon(Icons.medical_services), // Adds a nice icon
+                icon: const Icon(Icons.medical_services),
                 label: const Text("Go to Diagnosis"),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 onPressed: () {
-                  // This triggers the route defined in main.dart
-                  // The Bottom Navigation Bar will disappear on the new screen
-                  Navigator.pushNamed(context, '/EmergencyDiagnosis');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DiagnosisWizard(),
+                    ),
+                  );
                 },
-              ),
+              )
             ],
           ),
         ),
