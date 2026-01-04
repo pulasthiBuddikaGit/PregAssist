@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import './diagnosis_wizard.dart';
 
 class EmergencyDashboard extends StatelessWidget {
   const EmergencyDashboard({super.key});
@@ -16,14 +17,15 @@ class EmergencyDashboard extends StatelessWidget {
             Color(0xFFFAF5FF),
             Color(0xFFDBEAFE),
           ],
-          stops: [0.0, 0.5, 1.0], 
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
       child: Scaffold(
         // 2. Make Scaffold transparent so gradient shows through
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color.fromARGB(0, 255, 255, 255),
         
         appBar: AppBar(
+          // --- AppBar Gradient & Rounded Bottom ---
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -42,6 +44,7 @@ class EmergencyDashboard extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0, 
 
+          // --- LOGO & TITLE ---
           leadingWidth: 70, 
           leading: Padding(
             padding: const EdgeInsets.only(left: 12.0), 
@@ -50,11 +53,10 @@ class EmergencyDashboard extends StatelessWidget {
               fit: BoxFit.contain, 
             ),
           ),
-          
           title: const Text(
             "Emergency Training",
             style: TextStyle(
-              fontSize: 20,              
+              fontSize: 20, 
               fontWeight: FontWeight.bold, 
               color: Colors.white,    
             ),
@@ -72,10 +74,10 @@ class EmergencyDashboard extends StatelessWidget {
               // 1. BIG DIAGNOSIS BUTTON
               Container(
                 width: double.infinity,
-                height: 140, // Big box size
+                height: 120, // Big box size
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  // Pink/Orange Gradient for high visibility
+                  // Pink/Orange Gradient (Urgent look)
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -86,7 +88,7 @@ class EmergencyDashboard extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -97,7 +99,12 @@ class EmergencyDashboard extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
                     onTap: () {
-                       Navigator.pushNamed(context, '/EmergencyDiagnosis');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DiagnosisWizard(),
+                        ),
+                      );
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,9 +144,9 @@ class EmergencyDashboard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _buildTrainingBox("Preterm Labor", Icons.baby_changing_station)),
+                      Expanded(child: _buildTrainingBox("Preterm Labor", Icons.child_friendly)),
                       const SizedBox(width: 15),
-                      Expanded(child: _buildTrainingBox("Preeclampsia", Icons.speed)),
+                      Expanded(child: _buildTrainingBox("Preeclampsia", Icons.speed)), 
                     ],
                   ),
                   const SizedBox(height: 15),
@@ -166,15 +173,14 @@ class EmergencyDashboard extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // 5. HISTORY DROP BOXES (One by One)
+              // 5. HISTORY BOXES (One by One)
               _buildHistoryBox("Diagnosis: Normal", "Yesterday"),
               const SizedBox(height: 10),
               _buildHistoryBox("Diagnosis: Preterm Labor", "Last Week"),
               const SizedBox(height: 10),
               _buildHistoryBox("Diagnosis: Normal", "2 Weeks Ago"),
               
-              // Extra space at bottom so navigation bar doesn't cover content
-              const SizedBox(height: 100), 
+              const SizedBox(height: 40), // Extra bottom space
             ],
           ),
         ),
@@ -182,10 +188,10 @@ class EmergencyDashboard extends StatelessWidget {
     );
   }
 
-  // --- HELPER WIDGET 1: Training Box (Square Cube) ---
+  // --- HELPER 1: Training Box (Square Cube) ---
   Widget _buildTrainingBox(String title, IconData icon) {
     return Container(
-      height: 130, // Makes it square-ish
+      height: 130, 
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         // Blue/Purple Gradient
@@ -209,7 +215,9 @@ class EmergencyDashboard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () { print("Tapped $title"); },
+          onTap: () { 
+            // Add training navigation here later
+          },
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -223,7 +231,7 @@ class EmergencyDashboard extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
               ],
@@ -234,13 +242,12 @@ class EmergencyDashboard extends StatelessWidget {
     );
   }
 
-  // --- HELPER WIDGET 2: History Drop Box (Wide Strip) ---
+  // --- HELPER 2: History Box (Wide Strip) ---
   Widget _buildHistoryBox(String title, String subtitle) {
     return Container(
-      padding: const EdgeInsets.all(4), // Padding for the border/container
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        // Blue/Purple Gradient
+        // Cyan/Blue Gradient
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -258,10 +265,11 @@ class EmergencyDashboard extends StatelessWidget {
         ],
       ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: const BoxDecoration(
-            color: Colors.white24, // Semi-transparent white circle
+            color: Colors.white24, 
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.history, color: Colors.white),
