@@ -1,7 +1,40 @@
 import 'package:flutter/material.dart';
 
+// ✅ Import AuthLocal from main.dart (quick/simple approach)
+import '../../main.dart';
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // 1) Clear local session (offline)
+    await AuthLocal.clearSession();
+
+    // 2) Go back to welcome and remove all previous routes
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,63 +49,46 @@ class ProfileScreen extends StatelessWidget {
             Color(0xFFFAF5FF),
             Color(0xFFDBEAFE),
           ],
-          stops: [0.0, 0.5, 1.0], // Defines where the colors sit
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
       child: Scaffold(
-        // 2. Make Scaffold transparent so gradient shows through
         backgroundColor: Colors.transparent,
-        
+
         appBar: AppBar(
-          // --- UPDATED: AppBar Gradient & Rounded Bottom ---
           flexibleSpace: Container(
             decoration: const BoxDecoration(
-              // The Gradient for the AppBar
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                   Color(0xFF2B80FF),
-                   Color(0xFFAC46FF),
+                  Color(0xFF2B80FF),
+                  Color(0xFFAC46FF),
                 ],
               ),
-              // Rounded Corners (Bottom only)
               borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(25),
               ),
             ),
           ),
-          // Set shape to transparent/null so flexibleSpace takes over clipping if needed
-          // or just rely on the Container's borderRadius above.
-          // Note: backgroundColor must be transparent.
           backgroundColor: Colors.transparent,
-          elevation: 0, 
-
-          // --- EXISTING PROPERTIES BELOW ---
-          
-          // 1. UPDATED: Increase this value to make the logo area wider/bigger
-          leadingWidth: 70, 
-
-          // UPDATED: Adjusted logo container
+          elevation: 0,
+          leadingWidth: 70,
           leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0), 
+            padding: const EdgeInsets.only(left: 12.0),
             child: Image.asset(
               'assets/logo.png',
-              fit: BoxFit.contain, 
+              fit: BoxFit.contain,
             ),
           ),
-          
-          // 2. UPDATED: Title with Color, Bold, and Size
           title: const Text(
             "My Profile",
             style: TextStyle(
-              fontSize: 20,                // Bigger Size
-              fontWeight: FontWeight.bold, // Bold
-              // Changed to White so it is readable on the new Blue/Purple gradient
-              color: Colors.white,    
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          
           centerTitle: true,
         ),
 
@@ -80,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 50),
-              
+
               // --- PROFILE PICTURE SECTION ---
               Center(
                 child: Stack(
@@ -133,9 +149,9 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 25),
-              
+
               // --- NAME & EMAIL ---
               const Text(
                 "Katie",
@@ -147,32 +163,31 @@ class ProfileScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
-              
+
               // --- MENU OPTIONS ---
               _buildProfileOption(
-                icon: Icons.person_outline, 
+                icon: Icons.person_outline,
                 title: "Edit Personal Details",
                 onTap: () {},
               ),
-              
+
               _buildProfileOption(
-                icon: Icons.notifications_outlined, 
-                title: "Notifications", 
+                icon: Icons.notifications_outlined,
+                title: "Notifications",
                 onTap: () {},
               ),
-            
+
               // Logout Button
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    // UPDATED: Replaced solid color with a Red Gradient
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFFDD2476), // Deep Pink/Red
-                        Color(0xFFFB5938), // Bright Red/Orange
+                        Color(0xFFDD2476),
+                        Color(0xFFFB5938),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -180,16 +195,13 @@ class ProfileScreen extends StatelessWidget {
                   child: const Icon(Icons.logout, color: Colors.white),
                 ),
                 title: const Text(
-                  "Logout", 
+                  "Logout",
                   style: TextStyle(
-                    color: Colors.red, // Keep text red to match the warning vibe
-                    fontWeight: FontWeight.bold
-                  )
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                onTap: () {
-                  // Add logout logic here later
-                  print("User logged out");
-                },
+                onTap: () => _logout(context),
               ),
             ],
           ),
@@ -199,19 +211,24 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // Helper widget to make code cleaner
-  Widget _buildProfileOption({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildProfileOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF51A2FF),
-                Color(0xFF00D2F2),
-              ],),
-          borderRadius: BorderRadius.circular(8)
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF51A2FF),
+              Color(0xFF00D2F2),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: Colors.white),
       ),
