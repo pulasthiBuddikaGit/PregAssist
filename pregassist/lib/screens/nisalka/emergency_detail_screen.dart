@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
 
+import 'package:android_intent_plus/android_intent.dart'; // Import this
+import 'package:android_intent_plus/flag.dart';
+
+
 class EmergencyDetailScreen extends StatelessWidget {
   final String title;
   final String description;
   final String imagePath;
+
+
+    // Helper function to map titles to IDs
+  String _getDrillId(String title) {
+    if (title.toLowerCase().contains("hemorrhage")) return "hemorrhage";
+    if (title.toLowerCase().contains("sepsis")) return "sepsis";
+    if (title.toLowerCase().contains("preterm")) return "preterm";
+    if (title.toLowerCase().contains("preeclampsia")) return "preeclampsia";
+    return "default";
+  }
 
   const EmergencyDetailScreen({
     super.key,
@@ -131,9 +145,33 @@ class EmergencyDetailScreen extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      // Action for the specific training
-                      print("Navigating to AR Training for $title");
+                    // Inside onTap:
+                    // Import is already at the top: import 'package:device_apps/device_apps.dart';
+
+                      onTap: () async {
+                      String drillId = _getDrillId(title); // Get the ID based on the screen title
+                      print("🚀 Sending command to Unity: $drillId");
+
+                      final intent = AndroidIntent(
+                        action: 'android.intent.action.MAIN',
+                        package: 'com.pregassist.ar',
+                        componentName: 'com.unity3d.player.UnityPlayerGameActivity', // The correct name we found
+                        category: 'android.intent.category.LAUNCHER',
+                        
+                        // --- UPDATED FLAGS HERE ---
+                        // This combination forces Unity to close and restart fresh every time
+                        flags: <int>[
+                          Flag.FLAG_ACTIVITY_NEW_TASK,
+                          Flag.FLAG_ACTIVITY_CLEAR_TASK 
+                        ],
+                        // --------------------------
+                        
+                        arguments: <String, dynamic>{
+                          'drill_id': drillId,
+                        },
+                      );
+
+                      await intent.launch();
                     },
                     // UPDATED: Changed Center to Row to include the icon
                     child: Row(
