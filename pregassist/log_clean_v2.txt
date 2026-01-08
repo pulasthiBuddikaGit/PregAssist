@@ -1,0 +1,37 @@
+﻿Analyzing pregassist...                                         
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\common\profile_screen.dart:104:48 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\screens\common\profile_screen.dart:191:19 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\screens\dimalsha\ai_explanation_screen.dart:6:9 - use_super_parameters
+   info - Constructors for public widgets should have a named 'key' parameter - lib\screens\dimalsha\dashboard_screen.dart:9:7 - use_key_in_widget_constructors
+   info - Invalid use of a private type in a public API - lib\screens\dimalsha\dashboard_screen.dart:11:3 - library_private_types_in_public_api
+   info - Don't use 'BuildContext's across async gaps - lib\screens\dimalsha\dashboard_screen.dart:42:13 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\dimalsha\dashboard_screen.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\nisalka\diagnosis_result_screen.dart:33:24 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\nisalka\diagnosis_result_screen.dart:39:24 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\nisalka\diagnosis_result_screen.dart:45:24 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\nisalka\diagnosis_result_screen.dart:51:24 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\nisalka\diagnosis_result_screen.dart:57:24 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\nisalka\diagnosis_result_screen.dart:141:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\nisalka\diagnosis_result_screen.dart:182:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\nisalka\diagnosis_wizard.dart:213:39 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:5:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:6:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:129:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:130:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:131:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:132:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:139:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:150:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:155:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:156:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:165:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:187:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:197:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:198:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:199:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:200:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:209:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:210:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\expert_system.dart:211:7 - avoid_print
+

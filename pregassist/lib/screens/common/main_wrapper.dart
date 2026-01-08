@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
+
 import 'home_screen.dart';
 import '../nisalka/emergency_dashboard.dart';
 import '../pulasthi/ctg_segment_screen.dart';
 import '../../models/pulasthi/assessment_data.dart';
 import './profile_screen.dart';
+
+import 'home_screen.dart'; 
+import '../nisalka/emergency_dashboard.dart'; 
+import '../dimalsha/dashboard_screen.dart';
+import 'profile_screen.dart';
+
 
 class MainWrapper extends StatefulWidget {
   final AssessmentData data;
@@ -16,6 +23,7 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
+
 
   late final List<Widget> _pages;
 
@@ -29,6 +37,15 @@ class _MainWrapperState extends State<MainWrapper> {
       // CTGSegmentScreen(data: widget.data),
     ];
   }
+
+  final List<Widget> _pages = [
+    const HomeScreen(),         
+    // const Physical()            
+    const EmergencyDashboard(),   
+    const DashboardScreen(),
+    const ProfileScreen(),      
+  ];
+
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
@@ -64,6 +81,11 @@ class _MainWrapperState extends State<MainWrapper> {
                 icon: Icon(Icons.medical_information),
                 activeIcon: GradientIcon(Icons.medical_information),
                 label: 'Training',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.pregnant_woman),
+                activeIcon: GradientIcon(Icons.pregnant_woman),
+                label: 'Dashboard',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.woman),
