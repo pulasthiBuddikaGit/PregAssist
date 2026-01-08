@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
-
-
-import 'home_screen.dart';
-import '../nisalka/emergency_dashboard.dart';
-import '../pulasthi/ctg_segment_screen.dart';
-import '../../models/pulasthi/assessment_data.dart';
-import './profile_screen.dart';
-
 import 'home_screen.dart'; 
 import '../nisalka/emergency_dashboard.dart'; 
 import '../dimalsha/dashboard_screen.dart';
 import 'profile_screen.dart';
 
-
 class MainWrapper extends StatefulWidget {
-  final AssessmentData data;
-  const MainWrapper({super.key, required this.data});
+  const MainWrapper({super.key});
 
   @override
   State<MainWrapper> createState() => _MainWrapperState();
@@ -23,20 +13,6 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _selectedIndex = 0;
-
-
-  late final List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      const HomeScreen(),
-      const EmergencyDashboard(),
-      const ProfileScreen(),
-      // CTGSegmentScreen(data: widget.data),
-    ];
-  }
 
   final List<Widget> _pages = [
     const HomeScreen(),         
@@ -46,21 +22,31 @@ class _MainWrapperState extends State<MainWrapper> {
     const ProfileScreen(),      
   ];
 
-
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
+      // --- THE FIX IS HERE ---
+      // This allows the gradient background to extend BEHIND the nav bar
+      // so it shows through the rounded corners.
+      extendBody: true, 
+
       body: _pages[_selectedIndex],
+      
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           boxShadow: [
-            BoxShadow(color: Colors.black12, spreadRadius: 0, blurRadius: 10),
+            BoxShadow(
+              color: Colors.black12, 
+              spreadRadius: 0,
+              blurRadius: 10,
+            ),
           ],
         ),
         child: ClipRRect(
@@ -68,7 +54,9 @@ class _MainWrapperState extends State<MainWrapper> {
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
-            backgroundColor: Colors.white,
+            // Ensure this is transparent or white depending on your preference, 
+            // but usually white is standard for the bar itself.
+            backgroundColor: Colors.white, 
             selectedItemColor: const Color.fromARGB(255, 59, 1, 134),
             unselectedItemColor: Colors.grey,
             items: const [
