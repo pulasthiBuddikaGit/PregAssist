@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/pulasthi/assessment_data.dart';
+import '../../services/fetal_onnx_service.dart';
+import 'ctg_segment_screen.dart';
 
 class EventsResultScreen extends StatefulWidget {
   final AssessmentData data;
@@ -18,6 +20,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   late int _prolongedDecelerations;
 
   PredictionResult? _prediction;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -29,65 +32,129 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _prolongedDecelerations = widget.data.prolongedDecelerations;
   }
 
-  void _handlePredict() {
-    Classification classification = Classification.normal;
-    final List<String> reasons = [];
-
-    // Check baseline FHR
-    final baselineFHR = widget.data.baselineFHR!;
-    if (baselineFHR >= 110 && baselineFHR <= 160) {
-      reasons.add('Baseline FHR is within the normal range (110–160 bpm).');
-    } else if (baselineFHR > 160 && baselineFHR <= 180) {
-      reasons.add('Baseline FHR is mildly elevated (160–180 bpm).');
-      classification = Classification.suspect;
-    } else if (baselineFHR > 180) {
-      reasons.add('Baseline FHR is significantly elevated (above 180 bpm).');
-      classification = Classification.pathological;
-    } else if (baselineFHR < 110) {
-      reasons.add('Baseline FHR is below the normal range (below 110 bpm).');
-      classification = classification == Classification.pathological
-          ? Classification.pathological
-          : Classification.suspect;
+  /// Convert class id -> your UI object
+  PredictionResult _predictionFromClass(int cls) {
+    switch (cls) {
+      case 1:
+        return PredictionResult(
+          classification: Classification.normal,
+          reasons: const [
+            'The ONNX ML model predicted Normal fetal health (Class 1).',
+          ],
+        );
+      case 2:
+        return PredictionResult(
+          classification: Classification.suspect,
+          reasons: const [
+            'The ONNX ML model predicted Suspect fetal health (Class 2).',
+          ],
+        );
+      case 3:
+        return PredictionResult(
+          classification: Classification.pathological,
+          reasons: const [
+            'The ONNX ML model predicted Pathological fetal health (Class 3).',
+          ],
+        );
+      default:
+        return PredictionResult(
+          classification: Classification.suspect,
+          reasons: ['Unexpected model output class: $cls'],
+        );
     }
+  }
 
-    // Check severe and prolonged decelerations
-    final totalSevere = _severeDecelerations + _prolongedDecelerations;
-    if (totalSevere == 0) {
-      reasons.add('No severe or prolonged decelerations detected.');
-    } else if (totalSevere <= 2) {
-      reasons.add('$totalSevere severe or prolonged deceleration(s) detected.');
-      if (classification == Classification.normal) {
-        classification = Classification.suspect;
-      }
-    } else {
-      reasons.add('Multiple severe or prolonged decelerations detected ($totalSevere).');
-      classification = Classification.pathological;
-    }
+  /// Build the EXACT 12 model features (same order as manual_12c_features.json)
+  List<double> _buildFeatures12() {
+    final baseline = widget.data.baselineFHR!;
+    final lowest = widget.data.lowestFHR!;
+    final highest = widget.data.highestFHR!;
+    final durationMin = widget.data.segmentDuration!;
 
-    // Check accelerations
-    final expectedAccelerations = (widget.data.segmentDuration! / 10).floor();
-    if (_accelerations >= expectedAccelerations) {
-      reasons.add(
-        'Good number of accelerations ($_accelerations) indicating fetal reactivity.',
+    final durationSec = durationMin * 60.0;
+
+    final accelerations = _accelerations / durationSec;
+    final uterineContractions = _contractions / durationSec;
+    final lightDecels = _mildDecelerations / durationSec;
+    final severeDecels = _severeDecelerations / durationSec;
+    final prolongedDecels = _prolongedDecelerations / durationSec;
+
+    final width = (highest - lowest).toDouble();
+
+    return <double>[
+      baseline.toDouble(), // baseline value
+      accelerations, // accelerations (per second)
+      uterineContractions, // uterine_contractions (per second)
+      lightDecels, // light_decelerations (per second)
+      severeDecels, // severe_decelerations (per second)
+      prolongedDecels, // prolongued_decelerations (per second)
+      lowest.toDouble(), // histogram_min
+      highest.toDouble(), // histogram_max
+      width, // histogram_width
+      baseline.toDouble(), // histogram_mean (training trick)
+      baseline.toDouble(), // histogram_mode (training trick)
+      baseline.toDouble(), // histogram_median (training trick)
+    ];
+  }
+
+  Future<void> _handlePredict() async {
+    // Safety checks (baseline/lowest/highest should exist from prior steps)
+    if (widget.data.baselineFHR == null ||
+        widget.data.lowestFHR == null ||
+        widget.data.highestFHR == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing baseline/lowest/highest values.')),
       );
-    } else if (_accelerations == 0 && classification != Classification.pathological) {
-      reasons.add('No accelerations detected, which may indicate reduced fetal reactivity.');
-      if (classification == Classification.normal) {
-        classification = Classification.suspect;
-      }
+      return;
     }
 
-    // Check contractions
-    if (_contractions <= 5) {
-      reasons.add('Low to moderate number of contractions, consistent with a stable pattern.');
+    final width = widget.data.highestFHR! - widget.data.lowestFHR!;
+    if (width <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Highest FHR must be greater than Lowest FHR.')),
+      );
+      return;
     }
 
     setState(() {
-      _prediction = PredictionResult(
-        classification: classification,
-        reasons: reasons,
-      );
+      _isLoading = true;
+      _prediction = null;
     });
+
+    try {
+      // Save stepper values into AssessmentData (optional but good practice)
+      widget.data.accelerations = _accelerations;
+      widget.data.contractions = _contractions;
+      widget.data.mildDecelerations = _mildDecelerations;
+      widget.data.severeDecelerations = _severeDecelerations;
+      widget.data.prolongedDecelerations = _prolongedDecelerations;
+
+      final features = _buildFeatures12();
+
+      print('duration=${widget.data.segmentDuration}');
+      print(
+          'baseline=${widget.data.baselineFHR}, lowest=${widget.data.lowestFHR}, highest=${widget.data.highestFHR}');
+      print(
+          'counts: acc=$_accelerations uc=$_contractions mild=$_mildDecelerations severe=$_severeDecelerations prol=$_prolongedDecelerations');
+      print('features12=${_buildFeatures12()}');
+
+      // Call ONNX model (offline)
+      final cls = await FetalOnnxService.instance.predictClass(features);
+
+      setState(() {
+        _prediction = _predictionFromClass(cls);
+        widget.data.prediction = _prediction;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Prediction failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _handleSave() {
@@ -112,6 +179,28 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ✅ UPDATED: Reset + navigate directly to CTGSegmentScreen
+  void _handleReset() {
+    // reset shared data
+    widget.data.segmentDuration = null;
+    widget.data.baselineFHR = null;
+    widget.data.lowestFHR = null;
+    widget.data.highestFHR = null;
+
+    widget.data.accelerations = 0;
+    widget.data.contractions = 0;
+    widget.data.mildDecelerations = 0;
+    widget.data.severeDecelerations = 0;
+    widget.data.prolongedDecelerations = 0;
+    widget.data.prediction = null;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => CTGSegmentScreen(data: widget.data)),
+      (route) => false,
     );
   }
 
@@ -151,7 +240,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'This prediction is based on established CTG interpretation guidelines and the following parameters:',
+                  'This result is produced by the offline ML model using the entered CTG parameters.',
                   style: TextStyle(color: Colors.black54),
                 ),
                 const SizedBox(height: 14),
@@ -164,12 +253,14 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildParameterRow('Baseline FHR:', '${widget.data.baselineFHR} bpm'),
+                      _buildParameterRow(
+                          'Baseline FHR:', '${widget.data.baselineFHR} bpm'),
                       _buildParameterRow(
                         'FHR Range:',
                         '${widget.data.lowestFHR}–${widget.data.highestFHR} bpm',
                       ),
-                      _buildParameterRow('Accelerations:', '$_accelerations'),
+                      _buildParameterRow(
+                          'Accelerations:', '$_accelerations'),
                       _buildParameterRow(
                         'Decelerations:',
                         '$_mildDecelerations mild, $_severeDecelerations severe, $_prolongedDecelerations prolonged',
@@ -177,16 +268,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                       _buildParameterRow('Contractions:', '$_contractions'),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Normal CTG typically shows a baseline FHR of 110–160 bpm, presence of accelerations, no or minimal decelerations, and stable variability.',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Suspect or pathological patterns may indicate the need for further assessment, continuous monitoring, or intervention. Always correlate CTG findings with clinical context and other maternal-fetal assessments.',
-                  style: TextStyle(color: Colors.black54),
                 ),
                 const SizedBox(height: 18),
                 SizedBox(
@@ -204,7 +285,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     ),
                     child: const Text(
                       'Close',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -243,7 +325,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Same background gradient as your other redesigned screens
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -258,8 +339,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-
-        // ✅ No back icon on header (as requested)
         appBar: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -291,7 +370,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ),
           centerTitle: true,
         ),
-
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -324,78 +402,82 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-
-                      // Progress
                       ClipRRect(
                         borderRadius: BorderRadius.circular(999),
                         child: LinearProgressIndicator(
                           value: 3 / 3,
                           minHeight: 8,
                           backgroundColor: Colors.white.withOpacity(0.7),
-                          valueColor: const AlwaysStoppedAnimation(Color(0xFF2B80FF)),
+                          valueColor: const AlwaysStoppedAnimation(
+                              Color(0xFF2B80FF)),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       const Text(
                         'Events in this segment',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-
                       _sectionCard(
                         child: Column(
                           children: [
                             _buildStepperInput(
                               value: _accelerations,
-                              onChanged: (value) => setState(() => _accelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _accelerations = v),
                               label: 'Number of accelerations',
-                              helperText: 'Episodes where FHR rises ≥15 bpm for ≥15 seconds.',
+                              helperText:
+                                  'Episodes where FHR rises ≥15 bpm for ≥15 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _contractions,
-                              onChanged: (value) => setState(() => _contractions = value),
+                              onChanged: (v) =>
+                                  setState(() => _contractions = v),
                               label: 'Number of uterine contractions',
-                              helperText: 'Count peaks in the uterine contraction trace.',
+                              helperText:
+                                  'Count peaks in the uterine contraction trace.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _mildDecelerations,
-                              onChanged: (value) => setState(() => _mildDecelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _mildDecelerations = v),
                               label: 'Number of mild decelerations',
                               helperText: 'Shallow, short FHR drops.',
-                              tooltip: 'Drop <30 bpm below baseline and <60 s duration.',
+                              tooltip:
+                                  'Drop <30 bpm below baseline and <60 s duration.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _severeDecelerations,
-                              onChanged: (value) => setState(() => _severeDecelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _severeDecelerations = v),
                               label: 'Number of severe decelerations',
                               helperText: 'Deeper or longer FHR drops.',
                               tooltip:
-                                  'Drop ≥30 bpm below baseline or ≥60 s duration (but <2–3 min).',
+                                  'Drop ≥30 bpm below baseline or ≥60 s duration.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _prolongedDecelerations,
-                              onChanged: (value) =>
-                                  setState(() => _prolongedDecelerations = value),
+                              onChanged: (v) => setState(
+                                  () => _prolongedDecelerations = v),
                               label: 'Number of prolonged decelerations',
                               helperText: 'Decelerations lasting ≥2–3 minutes.',
                             ),
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _handlePredict,
+                          onPressed: _isLoading
+                              ? null
+                              : () async => await _handlePredict(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2B80FF),
                             foregroundColor: Colors.white,
@@ -404,21 +486,27 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            'Predict fetal status',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text(
+                                  'Predict fetal status (ONNX)',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
                         ),
                       ),
-
                       if (_prediction != null) ...[
                         const SizedBox(height: 16),
                         _buildPredictionResult(),
                       ],
-
                       const SizedBox(height: 16),
 
-                      // Keep back button on form (as requested)
+                      // Back | Reset | Save (Reset navigates to CTGSegmentScreen)
                       Row(
                         children: [
                           Expanded(
@@ -430,11 +518,33 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                               ),
                               child: const Text(
                                 'Back',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _prediction != null ? _handleReset : null,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF374151),
+                                side: const BorderSide(color: Color(0xFFD1D5DB)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                                'Reset',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -450,12 +560,14 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 elevation: 0,
                               ),
                               child: const Text(
-                                'Save assessment',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                'Save',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -505,7 +617,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             if (tooltip != null)
               Tooltip(
                 message: tooltip,
-                child: const Icon(Icons.info_outline, size: 16, color: Colors.black45),
+                child: const Icon(Icons.info_outline,
+                    size: 16, color: Colors.black45),
               ),
           ],
         ),
@@ -520,10 +633,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
               child: Center(
                 child: Text(
                   '$value',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -534,10 +644,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          helperText,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
+        Text(helperText,
+            style: const TextStyle(fontSize: 12, color: Colors.black54)),
       ],
     );
   }
@@ -605,7 +713,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: Colors.black45, fontSize: 14)),
+                  const Text('• ',
+                      style: TextStyle(color: Colors.black45, fontSize: 14)),
                   Expanded(
                     child: Text(
                       reason,
