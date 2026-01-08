@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart'; 
 import '../nisalka/emergency_dashboard.dart'; 
+import '../dimalsha/dashboard_screen.dart';
 import 'profile_screen.dart';
 
 class MainWrapper extends StatefulWidget {
@@ -17,6 +18,7 @@ class _MainWrapperState extends State<MainWrapper> {
     const HomeScreen(),         
     // const Physical()            
     const EmergencyDashboard(),   
+    const DashboardScreen(),
     const ProfileScreen(),      
   ];
 
@@ -67,6 +69,11 @@ class _MainWrapperState extends State<MainWrapper> {
                 icon: Icon(Icons.medical_information),
                 activeIcon: GradientIcon(Icons.medical_information),
                 label: 'Training',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.pregnant_woman),
+                activeIcon: GradientIcon(Icons.pregnant_woman),
+                label: 'Dashboard',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.woman),
