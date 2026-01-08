@@ -1,0 +1,14 @@
+[
+  "baseline value",
+  "accelerations",
+  "uterine_contractions",
+  "light_decelerations",
+  "severe_decelerations",
+  "prolongued_decelerations",
+  "histogram_min",
+  "histogram_max",
+  "histogram_width",
+  "histogram_mean",
+  "histogram_mode",
+  "histogram_median"
+]
