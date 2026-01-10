@@ -1,5 +1,5 @@
 # Intelligent Prenatal Care Assistant  
-*(AI- and AR-Integrated Decision Support System for Pregnancy Care)*
+*(AI- and AR-Integrated Holistic Approach for Pregnancy Care)*
 
 ---
 
@@ -40,9 +40,9 @@ The system follows a **modular and integrated architecture**, where each compone
 
 
 
-*(This diagram represents the conceptual data flow and system structure.)*
+<!-- *(This diagram represents the conceptual data flow and system structure.)*
 
----
+--- -->
 
 ## 3. Dependencies and Technologies Used
 
