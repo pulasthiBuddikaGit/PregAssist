@@ -9,7 +9,7 @@ Pregnancy is a complex and dynamic process that requires continuous monitoring o
 
 This project proposes an **intelligent prenatal care assistant** that integrates multiple components into a single platform. The system combines maternal physical health monitoring, mental health risk assessment, interactive educational support, and an explainable AI-based fetal health decision support system (DSS). The primary objective is to support pregnant mothers in daily care while assisting obstetricians and gynecologists in making accurate, transparent, and well-informed clinical decisions.
 
-A key contribution of this project is the **fetal health DSS**, which uses machine learning to classify fetal health from CTG features and provides explainable outputs to strengthen clinical judgment rather than replace it. The solution follows a mobile-first design and is optimized for practical deployment in real-world healthcare environments.
+The solution follows a mobile-first design and is optimized for practical deployment in real-world healthcare environments.
 
 ---
 
