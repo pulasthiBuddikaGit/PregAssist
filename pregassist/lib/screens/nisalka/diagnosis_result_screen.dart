@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+// 1. ADD THESE IMPORTS
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 
 class DiagnosisResultScreen extends StatelessWidget {
   final String diagnosis;
@@ -10,10 +13,31 @@ class DiagnosisResultScreen extends StatelessWidget {
     required this.reasoning,
   });
 
+  // --- 2. THE HELPER FUNCTION (Exact code that worked before) ---
+  Future<void> _launchAR(String drillId) async {
+  print("🚀 Launching AR for: $drillId");
+  
+  final intent = AndroidIntent(
+    action: 'android.intent.action.MAIN',
+    package: 'com.pregassist.ar', 
+    componentName: 'com.unity3d.player.UnityPlayerGameActivity', 
+    
+    category: 'android.intent.category.LAUNCHER',
+    flags: <int>[
+      Flag.FLAG_ACTIVITY_NEW_TASK,
+      Flag.FLAG_ACTIVITY_CLEAR_TASK
+    ],
+    arguments: <String, dynamic>{
+      'drill_id': drillId,
+    },
+  );
+
+  await intent.launch();
+}
+
   @override
   Widget build(BuildContext context) {
     // 1. Determine status color and icon
-    
     IconData statusIcon;
     bool isNormal = diagnosis.contains("Normal") || diagnosis.contains("Low Risk");
     if (isNormal) {
@@ -21,40 +45,45 @@ class DiagnosisResultScreen extends StatelessWidget {
     } else {
       statusIcon = Icons.warning_amber_rounded;
     }
-    // --- LOGIC FOR THE NEW ACTION BOX (Updated for 4 Results) ---
+
+    // --- LOGIC FOR THE NEW ACTION BOX (Updated to call AR) ---
     String actionText;
     String actionImage;
     VoidCallback actionTap;
 
     if (diagnosis.contains("Preterm Labor")) {
       // RESULT 1: Preterm Labor
-      actionText = "AR Emergency Training for Pretrm Labor";
+      actionText = "AR Training: Preterm Labor";
       actionImage = "assets/preterm_labour.png"; 
-      actionTap = () { print("Navigate to Hospital Maps"); };
+      // Call the AR Launcher
+      actionTap = () => _launchAR("preterm"); 
 
     } else if (diagnosis.contains("Preeclampsia")) {
       // RESULT 2: Preeclampsia
-      actionText = "AR Emergency Training for Preeclampsia";
+      actionText = "AR Training: Preeclampsia";
       actionImage = "assets/preeclampsia.png"; 
-      actionTap = () { print("Navigate to BP Tool or Call"); };
+      // Call the AR Launcher
+      actionTap = () => _launchAR("preeclampsia");
 
     } else if (diagnosis.contains("Sepsis")) {
       // RESULT 3: Sepsis
-      actionText = "AR Emergency Training for Sepsis";
+      actionText = "AR Training: Sepsis";
       actionImage = "assets/sepsis.png"; 
-      actionTap = () { print("Call Emergency"); };
+      // Call the AR Launcher
+      actionTap = () => _launchAR("sepsis");
 
     } else if (diagnosis.contains("Hemorrhage")) {
       // RESULT 4: Hemorrhage
-      actionText = "AR Emergency Training for Hemorrhage";
+      actionText = "AR Training: Hemorrhage";
       actionImage = "assets/hemorrhage.png"; 
-      actionTap = () { print("Call Ambulance Now"); };
+      // Call the AR Launcher
+      actionTap = () => _launchAR("hemorrhage");
 
     } else {
-      // Fallback (Normal / Low Risk)
+      // Fallback (Normal / Low Risk) -> No AR needed here
       actionText = "View Wellness Plan";
       actionImage = "assets/food.jpg"; 
-      actionTap = () { print("Navigate to Diet"); };
+      actionTap = () { print("Navigate to Diet/Wellness Page"); };
     }
 
 
@@ -106,11 +135,11 @@ class DiagnosisResultScreen extends StatelessWidget {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color.fromARGB(55, 255, 99, 125),
+                        color: Color.fromARGB(55, 255, 99, 125),
                         blurRadius: 15,
-                        offset: const Offset(0, 8),
+                        offset: Offset(0, 8),
                       )
                     ],
                   ),
@@ -140,11 +169,11 @@ class DiagnosisResultScreen extends StatelessWidget {
                       const SizedBox(height: 15),
                       Divider(color: Colors.white.withOpacity(0.3)),
                       const SizedBox(height: 15),
-                      Row(
+                      const Row(
                         children: [
-                          const Icon(Icons.info_outline, size: 16, color: Color(0xFFFFFFFF)),
-                          const SizedBox(width: 8),
-                          const Text(
+                          Icon(Icons.info_outline, size: 16, color: Color(0xFFFFFFFF)),
+                          SizedBox(width: 8),
+                          Text(
                             "Why this result?",
                             style: TextStyle(
                               fontSize: 16,
@@ -183,11 +212,11 @@ class DiagnosisResultScreen extends StatelessWidget {
                         BlendMode.darken
                       ),
                     ),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color.fromARGB(121, 1, 106, 226),
+                        color: Color.fromARGB(121, 1, 106, 226),
                         blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        offset: Offset(0, 5),
                       )
                     ],
                   ),
@@ -195,7 +224,7 @@ class DiagnosisResultScreen extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTap: actionTap,
+                      onTap: actionTap, // <--- THIS NOW CALLS THE AR FUNCTION
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
