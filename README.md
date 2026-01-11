@@ -69,7 +69,10 @@ a specific prenatal care challenge while sharing a common application framework.
 
 ### Visualization & Utilities
 - Matplotlib  
-- JSON  
+- JSON 
+
+### AR Technologies
+- Unity
 
 ### Development Tools
 - Git & GitHub  
