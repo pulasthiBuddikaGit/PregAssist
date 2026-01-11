@@ -39,7 +39,7 @@ The system follows a **modular and integrated architecture**, where each compone
 The system follows a modular and integrated architecture, where each component addresses
 a specific prenatal care challenge while sharing a common application framework.
 
-![System Architecture Diagram](pregassist\assets\architecture.png)
+![System Architecture Diagram](pregassist/assets/architecture.png)
 
 
 *(This diagram represents the conceptual data flow and system structure.)*
