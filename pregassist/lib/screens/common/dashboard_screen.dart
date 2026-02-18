@@ -80,7 +80,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/predict'),
+        //127.0.0.1 means “the emulator itself”, not your Windows host machine where Flask is running.
+        //To access the Flask server running on your Windows host from the Android emulator, you should use 10.0.2.2:5000
+        // Uri.parse('http://127.0.0.1:5000/predict'),
+        Uri.parse('http://10.0.2.2:5000/predict'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "trimester": selectedTrimester,
