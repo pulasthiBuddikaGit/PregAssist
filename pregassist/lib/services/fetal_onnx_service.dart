@@ -1,6 +1,18 @@
 import 'dart:math';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 
+class OnnxPrediction {
+  final int label; // 1=Normal, 2=Suspect, 3=Pathological
+  final List<double>? probabilities; // [p(normal), p(suspect), p(pathological)]
+  final double? confidence; // probability of selected label
+
+  const OnnxPrediction({
+    required this.label,
+    this.probabilities,
+    this.confidence,
+  });
+}
+
 class FetalOnnxService {
   FetalOnnxService._();
   static final FetalOnnxService instance = FetalOnnxService._();
@@ -20,8 +32,14 @@ class FetalOnnxService {
     print('ONNX Outputs: ${_session!.outputNames}');
   }
 
-  /// Returns class 1/2/3
+  /// Returns class 1/2/3.
   Future<int> predictClass(List<double> features12) async {
+    final prediction = await predictDetailed(features12);
+    return prediction.label;
+  }
+
+  /// Returns class + probabilities (if available) + confidence.
+  Future<OnnxPrediction> predictDetailed(List<double> features12) async {
     if (features12.length != 12) {
       throw ArgumentError('Expected 12 features, got ${features12.length}');
     }
@@ -38,8 +56,9 @@ class FetalOnnxService {
       // ✅ Your outputs are: [label, probabilities]
       // But older export used: [output_label, output_probability]
       // So we support BOTH.
-      OrtValue? labelOrt =
-          outputs['output_label'] ?? outputs['label'] ?? outputs[session.outputNames.first];
+      OrtValue? labelOrt = outputs['output_label'] ??
+          outputs['label'] ??
+          outputs[session.outputNames.first];
 
       if (labelOrt == null) {
         throw StateError(
@@ -59,29 +78,16 @@ class FetalOnnxService {
         label = int.parse(labelDyn.first.toString());
       }
 
-      // If label is not 1/2/3, compute from probabilities if available
-      if (label != 1 && label != 2 && label != 3) {
-        OrtValue? probOrt = outputs['output_probability'] ??
-            outputs['probabilities'] ??
-            (session.outputNames.length > 1 ? outputs[session.outputNames[1]] : null);
+      final probabilities = await _extractProbabilities(session, outputs);
 
-        if (probOrt == null) {
+      // If label is not 1/2/3, derive from probabilities (if present).
+      if (label != 1 && label != 2 && label != 3) {
+        if (probabilities == null || probabilities.isEmpty) {
           throw StateError(
             "Label wasn't 1/2/3 and probabilities output not found. Outputs: ${outputs.keys.toList()}",
           );
         }
-
-        final probDyn = await probOrt.asList();
-        List<double> probs;
-
-        // probs could be [p1,p2,p3] or [[p1,p2,p3]]
-        if (probDyn.isNotEmpty && probDyn.first is List) {
-          probs = (probDyn.first as List).cast<num>().map((e) => e.toDouble()).toList();
-        } else {
-          probs = probDyn.cast<num>().map((e) => e.toDouble()).toList();
-        }
-
-        final bestIdx = probs.indexOf(probs.reduce(max));
+        final bestIdx = probabilities.indexOf(probabilities.reduce(max));
         label = bestIdx + 1;
       }
 
@@ -89,11 +95,20 @@ class FetalOnnxService {
         throw StateError("Unexpected predicted label: $label");
       }
 
-      return label;
+      double? confidence;
+      if (probabilities != null && probabilities.length >= 3) {
+        confidence = probabilities[label - 1];
+      }
+
+      return OnnxPrediction(
+        label: label,
+        probabilities: probabilities,
+        confidence: confidence,
+      );
     } finally {
       // Dispose outputs
       for (final v in outputs.values) {
-        v?.dispose();
+        v.dispose();
       }
     }
   }
@@ -103,5 +118,30 @@ class FetalOnnxService {
       await _session!.close();
       _session = null;
     }
+  }
+
+  Future<List<double>?> _extractProbabilities(
+    OrtSession session,
+    Map<String, OrtValue?> outputs,
+  ) async {
+    OrtValue? probOrt = outputs['output_probability'] ??
+        outputs['probabilities'] ??
+        (session.outputNames.length > 1
+            ? outputs[session.outputNames[1]]
+            : null);
+
+    if (probOrt == null) return null;
+
+    final probDyn = await probOrt.asList();
+
+    // probs could be [p1,p2,p3] or [[p1,p2,p3]]
+    if (probDyn.isNotEmpty && probDyn.first is List) {
+      return (probDyn.first as List)
+          .cast<num>()
+          .map((e) => e.toDouble())
+          .toList();
+    }
+
+    return probDyn.cast<num>().map((e) => e.toDouble()).toList();
   }
 }

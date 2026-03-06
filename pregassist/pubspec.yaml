@@ -28,3 +28,5 @@ flutter:
     - assets/
     - assets/models/fetal_model_manual_12c_nozipmap.onnx
     - assets/manual_12c_features.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2_meta.json
