@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
+import 'dashboard_screen.dart';
 import '../nisalka/emergency_dashboard.dart';
 import '../pulasthi/ctg_segment_screen.dart';
 import '../../models/pulasthi/assessment_data.dart';
@@ -24,6 +25,7 @@ class _MainWrapperState extends State<MainWrapper> {
     super.initState();
     _pages = [
       const HomeScreen(),
+      const DashboardScreen(),
       const EmergencyDashboard(),
       const ProfileScreen(),
       // CTGSegmentScreen(data: widget.data),
@@ -59,6 +61,11 @@ class _MainWrapperState extends State<MainWrapper> {
                 icon: Icon(Icons.home),
                 activeIcon: GradientIcon(Icons.home),
                 label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                activeIcon: GradientIcon(Icons.dashboard),
+                label: 'Dashboard',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.medical_information),
