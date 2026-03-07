@@ -1,5 +1,5 @@
 # Intelligent Prenatal Care Assistant  
-*(AI- and AR-Integrated Decision Support System for Pregnancy Care)*
+*(AI- and AR-Integrated Holistic Approach for Pregnancy Care)*
 
 ---
 
@@ -36,8 +36,10 @@ The system follows a **modular and integrated architecture**, where each compone
 
 ### Architectural Diagram (Conceptual)
 
+The system follows a modular and integrated architecture, where each component addresses
+a specific prenatal care challenge while sharing a common application framework.
 
-
+![System Architecture Diagram](pregassist/assets/architecture.png)
 
 
 *(This diagram represents the conceptual data flow and system structure.)*
@@ -67,7 +69,10 @@ The system follows a **modular and integrated architecture**, where each compone
 
 ### Visualization & Utilities
 - Matplotlib  
-- JSON  
+- JSON 
+
+### AR Technologies
+- Unity
 
 ### Development Tools
 - Git & GitHub  
