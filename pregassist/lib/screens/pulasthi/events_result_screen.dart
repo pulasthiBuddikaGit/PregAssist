@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../models/pulasthi/assessment_data.dart';
+import '../../services/ctg_counterfactual_service.dart';
+import '../../services/ctg_shadow_explainability_service.dart';
+import '../../services/fetal_onnx_service.dart';
+import 'ctg_segment_screen.dart';
 
 class EventsResultScreen extends StatefulWidget {
   final AssessmentData data;
@@ -18,6 +23,16 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   late int _prolongedDecelerations;
 
   PredictionResult? _prediction;
+  OnnxPrediction? _onnxPrediction;
+  ShadowExplainabilityResult? _shadowExplanation;
+  CounterfactualSearchResult? _counterfactual;
+  String? _explanationError;
+  String? _counterfactualError;
+  bool _isLoading = false;
+  bool _isCounterfactualLoading = false;
+  bool _isExplanationSpeaking = false;
+  bool _isCounterfactualSpeaking = false;
+  late final FlutterTts _flutterTts;
 
   @override
   void initState() {
@@ -27,67 +42,183 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _mildDecelerations = widget.data.mildDecelerations;
     _severeDecelerations = widget.data.severeDecelerations;
     _prolongedDecelerations = widget.data.prolongedDecelerations;
+    _flutterTts = FlutterTts();
+    _flutterTts.setCompletionHandler(() {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
+    _flutterTts.setCancelHandler(() {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
+    _flutterTts.setErrorHandler((_) {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
   }
 
-  void _handlePredict() {
-    Classification classification = Classification.normal;
-    final List<String> reasons = [];
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
+  }
 
-    // Check baseline FHR
-    final baselineFHR = widget.data.baselineFHR!;
-    if (baselineFHR >= 110 && baselineFHR <= 160) {
-      reasons.add('Baseline FHR is within the normal range (110–160 bpm).');
-    } else if (baselineFHR > 160 && baselineFHR <= 180) {
-      reasons.add('Baseline FHR is mildly elevated (160–180 bpm).');
-      classification = Classification.suspect;
-    } else if (baselineFHR > 180) {
-      reasons.add('Baseline FHR is significantly elevated (above 180 bpm).');
-      classification = Classification.pathological;
-    } else if (baselineFHR < 110) {
-      reasons.add('Baseline FHR is below the normal range (below 110 bpm).');
-      classification = classification == Classification.pathological
-          ? Classification.pathological
-          : Classification.suspect;
+  bool get _hasShadowMismatch {
+    if (_onnxPrediction == null || _shadowExplanation == null) return false;
+    return _onnxPrediction!.label != _shadowExplanation!.onnxClass;
+  }
+
+  /// Convert class id -> your UI object
+  PredictionResult _predictionFromClass(int cls) {
+    switch (cls) {
+      case 1:
+        return PredictionResult(
+          classification: Classification.normal,
+          reasons: const [
+            'The ONNX ML model predicted Normal fetal health (Class 1).',
+          ],
+        );
+      case 2:
+        return PredictionResult(
+          classification: Classification.suspect,
+          reasons: const [
+            'The ONNX ML model predicted Suspect fetal health (Class 2).',
+          ],
+        );
+      case 3:
+        return PredictionResult(
+          classification: Classification.pathological,
+          reasons: const [
+            'The ONNX ML model predicted Pathological fetal health (Class 3).',
+          ],
+        );
+      default:
+        return PredictionResult(
+          classification: Classification.suspect,
+          reasons: ['Unexpected model output class: $cls'],
+        );
     }
+  }
 
-    // Check severe and prolonged decelerations
-    final totalSevere = _severeDecelerations + _prolongedDecelerations;
-    if (totalSevere == 0) {
-      reasons.add('No severe or prolonged decelerations detected.');
-    } else if (totalSevere <= 2) {
-      reasons.add('$totalSevere severe or prolonged deceleration(s) detected.');
-      if (classification == Classification.normal) {
-        classification = Classification.suspect;
-      }
-    } else {
-      reasons.add('Multiple severe or prolonged decelerations detected ($totalSevere).');
-      classification = Classification.pathological;
-    }
+  /// Build the EXACT 12 model features (same order as manual_12c_features.json)
+  List<double> _buildFeatures12() {
+    final baseline = widget.data.baselineFHR!;
+    final lowest = widget.data.lowestFHR!;
+    final highest = widget.data.highestFHR!;
+    final durationMin = widget.data.segmentDuration!;
 
-    // Check accelerations
-    final expectedAccelerations = (widget.data.segmentDuration! / 10).floor();
-    if (_accelerations >= expectedAccelerations) {
-      reasons.add(
-        'Good number of accelerations ($_accelerations) indicating fetal reactivity.',
+    final durationSec = durationMin * 60.0;
+
+    final accelerations = _accelerations / durationSec;
+    final uterineContractions = _contractions / durationSec;
+    final lightDecels = _mildDecelerations / durationSec;
+    final severeDecels = _severeDecelerations / durationSec;
+    final prolongedDecels = _prolongedDecelerations / durationSec;
+
+    final width = (highest - lowest).toDouble();
+
+    return <double>[
+      baseline.toDouble(), // baseline value
+      accelerations, // accelerations (per second)
+      uterineContractions, // uterine_contractions (per second)
+      lightDecels, // light_decelerations (per second)
+      severeDecels, // severe_decelerations (per second)
+      prolongedDecels, // prolongued_decelerations (per second)
+      lowest.toDouble(), // histogram_min
+      highest.toDouble(), // histogram_max
+      width, // histogram_width
+      baseline.toDouble(), // histogram_mean (training trick)
+      baseline.toDouble(), // histogram_mode (training trick)
+      baseline.toDouble(), // histogram_median (training trick)
+    ];
+  }
+
+  Future<void> _handlePredict() async {
+    // Safety checks (baseline/lowest/highest should exist from prior steps)
+    if (widget.data.baselineFHR == null ||
+        widget.data.lowestFHR == null ||
+        widget.data.highestFHR == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Missing baseline/lowest/highest values.')),
       );
-    } else if (_accelerations == 0 && classification != Classification.pathological) {
-      reasons.add('No accelerations detected, which may indicate reduced fetal reactivity.');
-      if (classification == Classification.normal) {
-        classification = Classification.suspect;
-      }
+      return;
     }
 
-    // Check contractions
-    if (_contractions <= 5) {
-      reasons.add('Low to moderate number of contractions, consistent with a stable pattern.');
+    final width = widget.data.highestFHR! - widget.data.lowestFHR!;
+    if (width <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Highest FHR must be greater than Lowest FHR.')),
+      );
+      return;
     }
 
     setState(() {
-      _prediction = PredictionResult(
-        classification: classification,
-        reasons: reasons,
-      );
+      _isLoading = true;
+      _prediction = null;
+      _onnxPrediction = null;
+      _shadowExplanation = null;
+      _explanationError = null;
+      _resetCounterfactualState();
     });
+
+    try {
+      // Save stepper values into AssessmentData (optional but good practice)
+      widget.data.accelerations = _accelerations;
+      widget.data.contractions = _contractions;
+      widget.data.mildDecelerations = _mildDecelerations;
+      widget.data.severeDecelerations = _severeDecelerations;
+      widget.data.prolongedDecelerations = _prolongedDecelerations;
+
+      final features = _buildFeatures12();
+
+      print('duration=${widget.data.segmentDuration}');
+      print(
+          'baseline=${widget.data.baselineFHR}, lowest=${widget.data.lowestFHR}, highest=${widget.data.highestFHR}');
+      print(
+          'counts: acc=$_accelerations uc=$_contractions mild=$_mildDecelerations severe=$_severeDecelerations prol=$_prolongedDecelerations');
+      print('features12=${_buildFeatures12()}');
+
+      // Main prediction from ONNX model.
+      final onnxPrediction =
+          await FetalOnnxService.instance.predictDetailed(features);
+
+      // Explanation path from shadow tree (approximation model).
+      ShadowExplainabilityResult? explanation;
+      String? explanationError;
+      try {
+        explanation =
+            await CtgShadowExplainabilityService.instance.explain(features);
+      } catch (e) {
+        explanationError = '$e';
+      }
+
+      setState(() {
+        _prediction = _predictionFromClass(onnxPrediction.label);
+        _onnxPrediction = onnxPrediction;
+        _shadowExplanation = explanation;
+        _explanationError = explanationError;
+        widget.data.prediction = _prediction;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Prediction failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _handleSave() {
@@ -112,6 +243,32 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Reset + navigate directly to CTGSegmentScreen
+  void _handleReset() {
+    // reset shared data
+    widget.data.segmentDuration = null;
+    widget.data.baselineFHR = null;
+    widget.data.lowestFHR = null;
+    widget.data.highestFHR = null;
+
+    widget.data.accelerations = 0;
+    widget.data.contractions = 0;
+    widget.data.mildDecelerations = 0;
+    widget.data.severeDecelerations = 0;
+    widget.data.prolongedDecelerations = 0;
+    widget.data.prediction = null;
+    _onnxPrediction = null;
+    _shadowExplanation = null;
+    _explanationError = null;
+    _resetCounterfactualState();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => CTGSegmentScreen(data: widget.data)),
+      (route) => false,
     );
   }
 
@@ -151,7 +308,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'This prediction is based on established CTG interpretation guidelines and the following parameters:',
+                  'This result is produced by the offline ML model using the entered CTG parameters.',
                   style: TextStyle(color: Colors.black54),
                 ),
                 const SizedBox(height: 14),
@@ -164,10 +321,11 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildParameterRow('Baseline FHR:', '${widget.data.baselineFHR} bpm'),
+                      _buildParameterRow(
+                          'Baseline FHR:', '${widget.data.baselineFHR} bpm'),
                       _buildParameterRow(
                         'FHR Range:',
-                        '${widget.data.lowestFHR}–${widget.data.highestFHR} bpm',
+                        '${widget.data.lowestFHR}-${widget.data.highestFHR} bpm',
                       ),
                       _buildParameterRow('Accelerations:', '$_accelerations'),
                       _buildParameterRow(
@@ -178,16 +336,66 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Normal CTG typically shows a baseline FHR of 110–160 bpm, presence of accelerations, no or minimal decelerations, and stable variability.',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Suspect or pathological patterns may indicate the need for further assessment, continuous monitoring, or intervention. Always correlate CTG findings with clinical context and other maternal-fetal assessments.',
-                  style: TextStyle(color: Colors.black54),
-                ),
+                if (_shadowExplanation != null) ...[
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Why the AI predicted this',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._shadowExplanation!.keyFactors.map(
+                    (reason) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '- ',
+                            style:
+                                TextStyle(color: Colors.black45, fontSize: 14),
+                          ),
+                          Expanded(
+                            child: Text(
+                              reason,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Decision summary',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _shadowExplanation!.decisionSummary,
+                    style: const TextStyle(color: Colors.black87),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Technical decision path',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  ..._shadowExplanation!.pathRules.map(
+                    (rule) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        '${rule.featureLabel}: ${_formatRuleValue(rule, rule.value)} ${rule.comparisonSymbol} ${_formatRuleValue(rule, rule.threshold)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
@@ -204,7 +412,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     ),
                     child: const Text(
                       'Close',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -214,6 +423,373 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
         ),
       ),
     );
+  }
+
+  void _resetCounterfactualState() {
+    _counterfactual = null;
+    _counterfactualError = null;
+    _isCounterfactualLoading = false;
+    _isExplanationSpeaking = false;
+    _isCounterfactualSpeaking = false;
+    _flutterTts.stop();
+  }
+
+  Future<void> _stopSpeech() async {
+    await _flutterTts.stop();
+    if (!mounted) return;
+    setState(() {
+      _isExplanationSpeaking = false;
+      _isCounterfactualSpeaking = false;
+    });
+  }
+
+  String _explanationSpeechText() {
+    final classLabel = _prediction?.label.split(' (').first ?? 'Unknown';
+    final reasons = _shadowExplanation?.keyFactors ??
+        _prediction?.reasons ??
+        const <String>[];
+    final cleanedReasons = reasons
+        .map(_speechFriendlyReason)
+        .where((reason) => reason.trim().isNotEmpty)
+        .toList();
+
+    final parts = <String>[
+      'The AI predicted $classLabel fetal status.',
+      if (cleanedReasons.isNotEmpty) 'Key reasons: ${cleanedReasons.join(' ')}',
+      if ((_shadowExplanation?.decisionSummary ?? '').isNotEmpty)
+        'Decision summary: ${_shadowExplanation!.decisionSummary}',
+    ];
+
+    return parts.join(' ');
+  }
+
+  String _speechFriendlyReason(String reason) {
+    var cleaned = reason.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+    cleaned = cleaned.replaceAll('present/increased', 'high');
+    cleaned = cleaned.replaceAll('limited', 'low');
+    cleaned = cleaned.replaceAll('lower', 'low');
+    cleaned = cleaned.replaceAll('higher', 'high');
+    cleaned = cleaned.replaceAll('wider', 'high');
+    cleaned = cleaned.replaceAll('narrower', 'low');
+    cleaned = cleaned.replaceAll('increased', 'high');
+    cleaned = cleaned.replaceAll('present', 'high');
+    cleaned = cleaned.trim();
+    if (cleaned.isEmpty) return '';
+    if (!cleaned.endsWith('.')) {
+      cleaned = '$cleaned.';
+    }
+    return cleaned;
+  }
+
+  Future<void> _toggleExplanationSpeech() async {
+    if (_prediction == null) return;
+
+    try {
+      if (_isExplanationSpeaking) {
+        await _stopSpeech();
+        return;
+      }
+
+      final speechText = _explanationSpeechText();
+      await _flutterTts.stop();
+      await _flutterTts.awaitSpeakCompletion(true);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0);
+
+      if (mounted) {
+        setState(() {
+          _isExplanationSpeaking = true;
+          _isCounterfactualSpeaking = false;
+        });
+      }
+
+      await _flutterTts.speak(speechText);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isExplanationSpeaking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speaker unavailable: $e')),
+      );
+    }
+  }
+
+  Future<void> _prepareCounterfactual() async {
+    if (_onnxPrediction == null || widget.data.segmentDuration == null) {
+      return;
+    }
+    if (_counterfactual != null) {
+      return;
+    }
+    if (_isCounterfactualLoading) {
+      return;
+    }
+
+    setState(() {
+      _isCounterfactualLoading = true;
+      _counterfactualError = null;
+    });
+
+    try {
+      final result = await CtgCounterfactualService.instance.search(
+        currentFeatures12: _buildFeatures12(),
+        currentClass: _onnxPrediction!.label,
+        segmentDurationMinutes: widget.data.segmentDuration!,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _counterfactual = result;
+        if (result == null) {
+          _counterfactualError = _onnxPrediction!.label == 1
+              ? 'This CTG is already in the best class. No step-up counterfactual is needed.'
+              : 'No nearby change was found that moves the ONNX model to the next better class.';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _counterfactualError = 'Counterfactual search failed: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isCounterfactualLoading = false);
+      }
+    }
+  }
+
+  Future<void> _toggleCounterfactualSpeech() async {
+    final result = _counterfactual;
+    if (result == null) return;
+
+    try {
+      if (_isCounterfactualSpeaking) {
+        await _stopSpeech();
+        return;
+      }
+
+      await _flutterTts.stop();
+      await _flutterTts.awaitSpeakCompletion(true);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0);
+
+      if (mounted) {
+        setState(() {
+          _isExplanationSpeaking = false;
+          _isCounterfactualSpeaking = true;
+        });
+      }
+
+      await _flutterTts.speak(result.speechText);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isCounterfactualSpeaking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speaker unavailable: $e')),
+      );
+    }
+  }
+
+  void _showCounterfactuals() {
+    final future = _prepareCounterfactual();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.72,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: FutureBuilder<void>(
+            future: future,
+            builder: (context, snapshot) => SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Counterfactuals',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'This search tests small nearby changes in baseline and event counts, then re-runs the main ONNX model to see whether the class improves.',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isCounterfactualLoading && _counterfactual == null) ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ] else if (_counterfactual != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _counterfactual!.summary,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E3A8A),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: _toggleCounterfactualSpeech,
+                                tooltip: _isCounterfactualSpeaking
+                                    ? 'Stop audio'
+                                    : 'Listen',
+                                icon: Icon(
+                                  _isCounterfactualSpeaking
+                                      ? Icons.stop_circle_outlined
+                                      : Icons.volume_up_outlined,
+                                  color: const Color(0xFF2B80FF),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Target class: ${_classLabel(_counterfactual!.currentClass)} -> ${_classLabel(_counterfactual!.targetClass)}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Suggested value changes',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._counterfactual!.adjustments.map(
+                      (adjustment) => Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Text(
+                          adjustment.instruction,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Suggested class confidence: ${((_counterfactual!.suggestedPrediction.confidence ?? 0) * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Text(
+                        _counterfactualError ??
+                            'Counterfactual suggestions are unavailable.',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2B80FF),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ).whenComplete(_stopSpeech);
+  }
+
+  String _classLabel(int cls) {
+    switch (cls) {
+      case 1:
+        return 'Normal';
+      case 2:
+        return 'Suspect';
+      case 3:
+        return 'Pathological';
+      default:
+        return 'Unknown';
+    }
   }
 
   Widget _buildParameterRow(String label, String value) {
@@ -240,10 +816,15 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     );
   }
 
+  String _formatRuleValue(ShadowDecisionRule rule, double value) {
+    final decimals = rule.unit == '/sec' ? 4 : 1;
+    final number = value.toStringAsFixed(decimals);
+    return rule.unit.isEmpty ? number : '$number${rule.unit}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Same background gradient as your other redesigned screens
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -258,8 +839,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-
-        // ✅ No back icon on header (as requested)
         appBar: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -291,7 +870,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ),
           centerTitle: true,
         ),
-
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -315,7 +893,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        "Step 3 of 3 – Events & Result",
+                        "Step 3 of 3 - Events & Result",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -324,78 +902,83 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-
-                      // Progress
                       ClipRRect(
                         borderRadius: BorderRadius.circular(999),
                         child: LinearProgressIndicator(
                           value: 3 / 3,
                           minHeight: 8,
                           backgroundColor: Colors.white.withOpacity(0.7),
-                          valueColor: const AlwaysStoppedAnimation(Color(0xFF2B80FF)),
+                          valueColor:
+                              const AlwaysStoppedAnimation(Color(0xFF2B80FF)),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       const Text(
                         'Events in this segment',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-
                       _sectionCard(
                         child: Column(
                           children: [
                             _buildStepperInput(
                               value: _accelerations,
-                              onChanged: (value) => setState(() => _accelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _accelerations = v),
                               label: 'Number of accelerations',
-                              helperText: 'Episodes where FHR rises ≥15 bpm for ≥15 seconds.',
+                              helperText:
+                                  'Count clear accelerations where the fetal heart rate rises by at least 15 bpm for at least 15 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _contractions,
-                              onChanged: (value) => setState(() => _contractions = value),
+                              onChanged: (v) =>
+                                  setState(() => _contractions = v),
                               label: 'Number of uterine contractions',
-                              helperText: 'Count peaks in the uterine contraction trace.',
+                              helperText:
+                                  'Count peaks in the uterine contraction trace.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _mildDecelerations,
-                              onChanged: (value) => setState(() => _mildDecelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _mildDecelerations = v),
                               label: 'Number of mild decelerations',
                               helperText: 'Shallow, short FHR drops.',
-                              tooltip: 'Drop <30 bpm below baseline and <60 s duration.',
+                              tooltip:
+                                  'Drop less than 30 bpm below baseline and shorter than 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _severeDecelerations,
-                              onChanged: (value) => setState(() => _severeDecelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _severeDecelerations = v),
                               label: 'Number of severe decelerations',
                               helperText: 'Deeper or longer FHR drops.',
                               tooltip:
-                                  'Drop ≥30 bpm below baseline or ≥60 s duration (but <2–3 min).',
+                                  'Drop of at least 30 bpm below baseline or duration of at least 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
                               value: _prolongedDecelerations,
-                              onChanged: (value) =>
-                                  setState(() => _prolongedDecelerations = value),
+                              onChanged: (v) =>
+                                  setState(() => _prolongedDecelerations = v),
                               label: 'Number of prolonged decelerations',
-                              helperText: 'Decelerations lasting ≥2–3 minutes.',
+                              helperText:
+                                  'Count prolonged decelerations lasting 2 to 3 minutes or longer.',
                             ),
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _handlePredict,
+                          onPressed: _isLoading
+                              ? null
+                              : () async => await _handlePredict(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2B80FF),
                             foregroundColor: Colors.white,
@@ -404,21 +987,29 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            'Predict fetal status',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text(
+                                  // 'Predict fetal status (ONNX + Explanation)',
+                                  'Predict fetal status',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
                         ),
                       ),
-
                       if (_prediction != null) ...[
                         const SizedBox(height: 16),
                         _buildPredictionResult(),
                       ],
-
                       const SizedBox(height: 16),
 
-                      // Keep back button on form (as requested)
+                      // Back | Reset | Save (Reset navigates to CTGSegmentScreen)
                       Row(
                         children: [
                           Expanded(
@@ -426,36 +1017,66 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: const Color(0xFF2B80FF),
-                                side: const BorderSide(color: Color(0xFF2B80FF)),
+                                side:
+                                    const BorderSide(color: Color(0xFF2B80FF)),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                               ),
                               child: const Text(
                                 'Back',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed:
+                                  _prediction != null ? _handleReset : null,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF374151),
+                                side:
+                                    const BorderSide(color: Color(0xFFD1D5DB)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text(
+                                'Reset',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: _prediction != null ? _handleSave : null,
+                              onPressed:
+                                  _prediction != null ? _handleSave : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF2B80FF),
-                                disabledBackgroundColor: const Color(0xFFE5E7EB),
+                                disabledBackgroundColor:
+                                    const Color(0xFFE5E7EB),
                                 foregroundColor: Colors.white,
-                                disabledForegroundColor: const Color(0xFF9CA3AF),
+                                disabledForegroundColor:
+                                    const Color(0xFF9CA3AF),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 elevation: 0,
                               ),
                               child: const Text(
-                                'Save assessment',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                'Save',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -499,13 +1120,15 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             if (tooltip != null)
               Tooltip(
                 message: tooltip,
-                child: const Icon(Icons.info_outline, size: 16, color: Colors.black45),
+                child: const Icon(Icons.info_outline,
+                    size: 16, color: Colors.black45),
               ),
           ],
         ),
@@ -521,9 +1144,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                 child: Text(
                   '$value',
                   style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -534,10 +1155,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          helperText,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
+        Text(helperText,
+            style: const TextStyle(fontSize: 12, color: Colors.black54)),
       ],
     );
   }
@@ -564,6 +1183,10 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   }
 
   Widget _buildPredictionResult() {
+    final onnx = _onnxPrediction;
+    final explanation = _shadowExplanation;
+    final classLabel = _prediction!.label.split(' (').first;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -583,50 +1206,157 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             children: [
               Icon(_prediction!.icon, color: _prediction!.iconColor, size: 32),
               const SizedBox(width: 12),
-              Text(
-                _prediction!.label,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _prediction!.textColor,
+              Expanded(
+                child: Text(
+                  _prediction!.label,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: _prediction!.textColor,
+                  ),
                 ),
               ),
             ],
           ),
+          if (onnx?.confidence != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Confidence: ${(onnx!.confidence! * 100).toStringAsFixed(1)}%',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+          if (onnx?.probabilities != null &&
+              onnx!.probabilities!.length >= 3) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Normal ${(onnx.probabilities![0] * 100).toStringAsFixed(1)}%  |  '
+              'Suspect ${(onnx.probabilities![1] * 100).toStringAsFixed(1)}%  |  '
+              'Pathological ${(onnx.probabilities![2] * 100).toStringAsFixed(1)}%',
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ],
           const SizedBox(height: 14),
-          const Text(
-            'Why this result?',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Why the AI predicted $classLabel',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _toggleExplanationSpeech,
+                tooltip: _isExplanationSpeaking
+                    ? 'Stop audio'
+                    : 'Listen to explanation',
+                icon: Icon(
+                  _isExplanationSpeaking
+                      ? Icons.stop_circle_outlined
+                      : Icons.volume_up_outlined,
+                  color: const Color(0xFF2B80FF),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          ..._prediction!.reasons.map(
+          ...(explanation?.keyFactors.isNotEmpty ?? false
+                  ? explanation!.keyFactors
+                  : _prediction!.reasons)
+              .map(
             (reason) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: Colors.black45, fontSize: 14)),
+                  const Text(
+                    '- ',
+                    style: TextStyle(color: Colors.black45, fontSize: 14),
+                  ),
                   Expanded(
                     child: Text(
                       reason,
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.black87),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          if (explanation != null) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'Decision summary',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              explanation.decisionSummary,
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ],
+          if (_hasShadowMismatch) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                border: Border.all(color: const Color(0xFFFCD34D)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Explanation is an approximation of the AI model; prediction is based on the main model.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF92400E),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          if (_explanationError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Explanation unavailable: $_explanationError',
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ],
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: _showDetailedExplanation,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF2B80FF),
-              padding: EdgeInsets.zero,
-            ),
-            child: const Text(
-              'View detailed explanation',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+          Wrap(
+            spacing: 18,
+            runSpacing: 8,
+            children: [
+              TextButton(
+                onPressed: _showDetailedExplanation,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2B80FF),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text(
+                  'View detailed explanation',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+              TextButton(
+                onPressed: _showCounterfactuals,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2B80FF),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text(
+                  'Counterfactuals',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
         ],
       ),

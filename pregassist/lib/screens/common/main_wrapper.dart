@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
+import 'dashboard_screen.dart';
 import '../nisalka/emergency_dashboard.dart';
 import './profile_screen.dart';
 import '../Malikshi/chatbot_screen.dart';
@@ -25,6 +26,25 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
+<<<<<<< HEAD
+=======
+  int _selectedIndex = 0;
+
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomeScreen(),
+      const DashboardScreen(),
+      const EmergencyDashboard(),
+      const ProfileScreen(),
+      // CTGSegmentScreen(data: widget.data),
+    ];
+  }
+
+>>>>>>> main
   void _onItemTapped(int index) {
     if (index == widget.selectedIndex) return;
 
@@ -66,6 +86,11 @@ class _MainWrapperState extends State<MainWrapper> {
                 icon: Icon(Icons.home),
                 activeIcon: GradientIcon(Icons.home),
                 label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                activeIcon: GradientIcon(Icons.dashboard),
+                label: 'Dashboard',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.medical_information),

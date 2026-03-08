@@ -1,0 +1,452 @@
+{
+  "id": 0,
+  "is_leaf": false,
+  "feature_index": 5,
+  "feature_name": "prolongued_decelerations",
+  "threshold": 0.0005000000237487257,
+  "left": {
+    "id": 1,
+    "is_leaf": false,
+    "feature_index": 1,
+    "feature_name": "accelerations",
+    "threshold": 0.001500000071246177,
+    "left": {
+      "id": 2,
+      "is_leaf": false,
+      "feature_index": 11,
+      "feature_name": "histogram_median",
+      "threshold": 136.5,
+      "left": {
+        "id": 3,
+        "is_leaf": false,
+        "feature_index": 2,
+        "feature_name": "uterine_contractions",
+        "threshold": 0.0035000001080334187,
+        "left": {
+          "id": 4,
+          "is_leaf": false,
+          "feature_index": 7,
+          "feature_name": "histogram_max",
+          "threshold": 141.5,
+          "left": {
+            "id": 5,
+            "is_leaf": false,
+            "feature_index": 0,
+            "feature_name": "baseline value",
+            "threshold": 121.0,
+            "left": {
+              "id": 6,
+              "is_leaf": true,
+              "class_counts": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "pred_class": 0
+            },
+            "right": {
+              "id": 7,
+              "is_leaf": true,
+              "class_counts": [
+                0.06659747448538315,
+                0.14461165888254632,
+                0.7887908666320703
+              ],
+              "pred_class": 2
+            }
+          },
+          "right": {
+            "id": 8,
+            "is_leaf": false,
+            "feature_index": 11,
+            "feature_name": "histogram_median",
+            "threshold": 124.5,
+            "left": {
+              "id": 9,
+              "is_leaf": true,
+              "class_counts": [
+                0.307122507122507,
+                0.0,
+                0.6928774928774927
+              ],
+              "pred_class": 2
+            },
+            "right": {
+              "id": 10,
+              "is_leaf": true,
+              "class_counts": [
+                0.11818447595380786,
+                0.7485016810407829,
+                0.13331384300540852
+              ],
+              "pred_class": 1
+            }
+          }
+        },
+        "right": {
+          "id": 11,
+          "is_leaf": false,
+          "feature_index": 3,
+          "feature_name": "light_decelerations",
+          "threshold": 0.00849999999627471,
+          "left": {
+            "id": 12,
+            "is_leaf": false,
+            "feature_index": 6,
+            "feature_name": "histogram_min",
+            "threshold": 120.5,
+            "left": {
+              "id": 13,
+              "is_leaf": true,
+              "class_counts": [
+                0.9815354713313899,
+                0.01846452866861034,
+                0.0
+              ],
+              "pred_class": 0
+            },
+            "right": {
+              "id": 14,
+              "is_leaf": true,
+              "class_counts": [
+                0.3913078830751717,
+                0.23791519290970445,
+                0.3707769240151238
+              ],
+              "pred_class": 0
+            }
+          },
+          "right": {
+            "id": 15,
+            "is_leaf": true,
+            "class_counts": [
+              0.255813953488372,
+              0.0,
+              0.7441860465116277
+            ],
+            "pred_class": 2
+          }
+        }
+      },
+      "right": {
+        "id": 16,
+        "is_leaf": false,
+        "feature_index": 0,
+        "feature_name": "baseline value",
+        "threshold": 147.5,
+        "left": {
+          "id": 17,
+          "is_leaf": false,
+          "feature_index": 3,
+          "feature_name": "light_decelerations",
+          "threshold": 0.0035000001080334187,
+          "left": {
+            "id": 18,
+            "is_leaf": false,
+            "feature_index": 8,
+            "feature_name": "histogram_width",
+            "threshold": 12.5,
+            "left": {
+              "id": 19,
+              "is_leaf": true,
+              "class_counts": [
+                0.0,
+                0.7577592732778197,
+                0.24224072672218008
+              ],
+              "pred_class": 1
+            },
+            "right": {
+              "id": 20,
+              "is_leaf": true,
+              "class_counts": [
+                0.05222382414039003,
+                0.9242124763587877,
+                0.023563699500821628
+              ],
+              "pred_class": 1
+            }
+          },
+          "right": {
+            "id": 21,
+            "is_leaf": false,
+            "feature_index": 8,
+            "feature_name": "histogram_width",
+            "threshold": 99.0,
+            "left": {
+              "id": 22,
+              "is_leaf": true,
+              "class_counts": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "pred_class": 0
+            },
+            "right": {
+              "id": 23,
+              "is_leaf": true,
+              "class_counts": [
+                0.5618797431406888,
+                0.14234286826230785,
+                0.2957773885970033
+              ],
+              "pred_class": 0
+            }
+          }
+        },
+        "right": {
+          "id": 24,
+          "is_leaf": false,
+          "feature_index": 7,
+          "feature_name": "histogram_max",
+          "threshold": 157.5,
+          "left": {
+            "id": 25,
+            "is_leaf": true,
+            "class_counts": [
+              0.0,
+              0.09995672868887931,
+              0.9000432713111207
+            ],
+            "pred_class": 2
+          },
+          "right": {
+            "id": 26,
+            "is_leaf": false,
+            "feature_index": 2,
+            "feature_name": "uterine_contractions",
+            "threshold": 0.0005000000237487257,
+            "left": {
+              "id": 27,
+              "is_leaf": true,
+              "class_counts": [
+                0.0,
+                0.6581196581196582,
+                0.3418803418803419
+              ],
+              "pred_class": 1
+            },
+            "right": {
+              "id": 28,
+              "is_leaf": true,
+              "class_counts": [
+                0.009310986964618243,
+                0.9906890130353816,
+                0.0
+              ],
+              "pred_class": 1
+            }
+          }
+        }
+      }
+    },
+    "right": {
+      "id": 29,
+      "is_leaf": false,
+      "feature_index": 1,
+      "feature_name": "accelerations",
+      "threshold": 0.0025000000605359674,
+      "left": {
+        "id": 30,
+        "is_leaf": false,
+        "feature_index": 6,
+        "feature_name": "histogram_min",
+        "threshold": 124.0,
+        "left": {
+          "id": 31,
+          "is_leaf": false,
+          "feature_index": 8,
+          "feature_name": "histogram_width",
+          "threshold": 122.5,
+          "left": {
+            "id": 32,
+            "is_leaf": false,
+            "feature_index": 11,
+            "feature_name": "histogram_median",
+            "threshold": 140.5,
+            "left": {
+              "id": 33,
+              "is_leaf": true,
+              "class_counts": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "pred_class": 0
+            },
+            "right": {
+              "id": 34,
+              "is_leaf": true,
+              "class_counts": [
+                0.7865168539325842,
+                0.21348314606741575,
+                0.0
+              ],
+              "pred_class": 0
+            }
+          },
+          "right": {
+            "id": 35,
+            "is_leaf": true,
+            "class_counts": [
+              0.31983989124688467,
+              0.22098028849784762,
+              0.45917982025526777
+            ],
+            "pred_class": 2
+          }
+        },
+        "right": {
+          "id": 36,
+          "is_leaf": true,
+          "class_counts": [
+            0.20833333333333323,
+            0.7916666666666663,
+            0.0
+          ],
+          "pred_class": 1
+        }
+      },
+      "right": {
+        "id": 37,
+        "is_leaf": false,
+        "feature_index": 8,
+        "feature_name": "histogram_width",
+        "threshold": 27.5,
+        "left": {
+          "id": 38,
+          "is_leaf": true,
+          "class_counts": [
+            0.6310679611650485,
+            0.3689320388349515,
+            0.0
+          ],
+          "pred_class": 0
+        },
+        "right": {
+          "id": 39,
+          "is_leaf": false,
+          "feature_index": 11,
+          "feature_name": "histogram_median",
+          "threshold": 113.0,
+          "left": {
+            "id": 40,
+            "is_leaf": true,
+            "class_counts": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "pred_class": 0
+          },
+          "right": {
+            "id": 41,
+            "is_leaf": true,
+            "class_counts": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "pred_class": 0
+          }
+        }
+      }
+    }
+  },
+  "right": {
+    "id": 42,
+    "is_leaf": false,
+    "feature_index": 5,
+    "feature_name": "prolongued_decelerations",
+    "threshold": 0.001500000071246177,
+    "left": {
+      "id": 43,
+      "is_leaf": false,
+      "feature_index": 1,
+      "feature_name": "accelerations",
+      "threshold": 0.001500000071246177,
+      "left": {
+        "id": 44,
+        "is_leaf": true,
+        "class_counts": [
+          0.13575458392101547,
+          0.039682109146142994,
+          0.8245633069328412
+        ],
+        "pred_class": 2
+      },
+      "right": {
+        "id": 45,
+        "is_leaf": false,
+        "feature_index": 1,
+        "feature_name": "accelerations",
+        "threshold": 0.004500000039115548,
+        "left": {
+          "id": 46,
+          "is_leaf": true,
+          "class_counts": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "pred_class": 0
+        },
+        "right": {
+          "id": 47,
+          "is_leaf": true,
+          "class_counts": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "pred_class": 0
+        }
+      }
+    },
+    "right": {
+      "id": 48,
+      "is_leaf": false,
+      "feature_index": 10,
+      "feature_name": "histogram_mode",
+      "threshold": 133.5,
+      "left": {
+        "id": 49,
+        "is_leaf": false,
+        "feature_index": 6,
+        "feature_name": "histogram_min",
+        "threshold": 64.5,
+        "left": {
+          "id": 50,
+          "is_leaf": true,
+          "class_counts": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "pred_class": 2
+        },
+        "right": {
+          "id": 51,
+          "is_leaf": true,
+          "class_counts": [
+            0.008964955175224127,
+            0.0,
+            0.9910350448247757
+          ],
+          "pred_class": 2
+        }
+      },
+      "right": {
+        "id": 52,
+        "is_leaf": true,
+        "class_counts": [
+          0.0,
+          0.08276603367968474,
+          0.9172339663203153
+        ],
+        "pred_class": 2
+      }
+    }
+  }
+}

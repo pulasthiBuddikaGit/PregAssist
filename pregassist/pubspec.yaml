@@ -7,14 +7,25 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
+  android_intent_plus: ^6.0.0
+  # device_apps: ^2.2.0
+  external_app_launcher: ^4.0.3
+  fl_chart: ^0.68.0
   flutter:
     sdk: flutter
+<<<<<<< HEAD
   shared_preferences: any
   http: any
   camera: any
   permission_handler: any
   fl_chart: any
   url_launcher: any
+=======
+  http: ^1.2.0
+  shared_preferences: ^2.2.2
+  flutter_onnxruntime: ^1.6.1
+  flutter_tts: ^4.2.5
+>>>>>>> main
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +36,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/models/fetal_model_manual_12c_nozipmap.onnx
+    - assets/manual_12c_features.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2_meta.json
