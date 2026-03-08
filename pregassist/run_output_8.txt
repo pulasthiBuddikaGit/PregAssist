@@ -1,0 +1,14 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/main.dart:229:30: Error: The method 'EmergencyDashboard' isn't defined for the type '_MyAppState'.
+ - '_MyAppState' is from 'package:pregassist/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'EmergencyDashboard'.
+                      child: EmergencyDashboard(),
+                             ^^^^^^^^^^^^^^^^^^
+lib/main.dart:234:30: Error: The method 'ProfileScreen' isn't defined for the type '_MyAppState'.
+ - '_MyAppState' is from 'package:pregassist/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'ProfileScreen'.
+                      child: ProfileScreen(),
+                             ^^^^^^^^^^^^^
+Waiting for connection from debug service on Chrome...             24.9s
+Failed to compile application.

@@ -9,7 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  shared_preferences: ^2.2.2
+  shared_preferences: any
+  http: any
+  camera: any
+  permission_handler: any
+  fl_chart: any
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:

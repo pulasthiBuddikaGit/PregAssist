@@ -1,0 +1,50 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/screens/Malikshi/emotion_graph_screen.dart:3:8: Error: Error when reading 'lib/screens/models/emotion_record.dart': The system cannot find the path specified
+import '../models/emotion_record.dart';
+       ^
+lib/screens/Malikshi/emotion_graph_screen.dart:8:14: Error: Type 'EmotionRecord' not found.
+  final List<EmotionRecord> emotionRecords;
+             ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:33:8: Error: Type 'EmotionRecord' not found.
+  List<EmotionRecord> get _textRecords =>
+       ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:8:14: Error: 'EmotionRecord' isn't a type.
+  final List<EmotionRecord> emotionRecords;
+             ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:34:44: Error: The getter 'source' isn't defined for the type 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'source'.
+      widget.emotionRecords.where((r) => r.source == 'combined').toList();
+                                           ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:37:42: Error: The getter 'source' isn't defined for the type 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'source'.
+      widget.emotionRecords.any((r) => r.source == 'combined');
+                                         ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:60:57: Error: The getter 'isNegative' isn't defined for the type 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'isNegative'.
+  int get _negativeCount => _textRecords.where((r) => r.isNegative).length;
+                                                        ^^^^^^^^^^
+Unhandled exception:
+Unsupported operation: Unsupported invalid type InvalidType(<invalid>) (InvalidType). Encountered while compiling file:///D:/Malikshi/PregAssist/pregassist/lib/screens/Malikshi/emotion_graph_screen.dart, which contains the type: FunctionType(EmotionGraphScreen Function({required emotionRecords: List<<invalid>>, key: Key?, onAlertTrustedPerson: void Function()?, onBack: void Function()?, required onStartNew: void Function(), onViewExercises: void Function()?})).
+#0      LibraryCompiler._typeCompilationError (package:dev_compiler/src/kernel/compiler_new.dart:4480)
+#1      LibraryCompiler._emitType (package:dev_compiler/src/kernel/compiler_new.dart:4445)
+#2      LibraryCompiler._emitFunctionTagged (package:dev_compiler/src/kernel/compiler_new.dart:4292)
+#3      LibraryCompiler._emitClassDeclaration (package:dev_compiler/src/kernel/compiler_new.dart:1507)
+#4      LibraryCompiler._emitClass (package:dev_compiler/src/kernel/compiler_new.dart:1426)
+#5      List.forEach (dart:core-patch/growable_array.dart:428)
+#6      LibraryCompiler._emitLibrary (package:dev_compiler/src/kernel/compiler_new.dart:1348)
+#7      LibraryCompiler.emitLibrary (package:dev_compiler/src/kernel/compiler_new.dart:962)
+#8      LibraryBundleCompiler.emitModule (package:dev_compiler/src/kernel/compiler_new.dart:165)
+#9      IncrementalJavaScriptBundler.compile (package:frontend_server/src/javascript_bundle.dart:324)
+#10     FrontendCompiler.writeJavaScriptBundle (package:frontend_server/frontend_server.dart:922)
+<asynchronous suspension>
+#11     FrontendCompiler.compile (package:frontend_server/frontend_server.dart:728)
+<asynchronous suspension>
+#12     listenAndCompile.<anonymous closure> (package:frontend_server/frontend_server.dart:1449)
+<asynchronous suspension>
+The Dart compiler exited unexpectedly.
+Waiting for connection from debug service on Chrome...             18.4s
+Failed to compile application.

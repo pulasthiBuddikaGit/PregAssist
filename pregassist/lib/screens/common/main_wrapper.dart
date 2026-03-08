@@ -2,43 +2,50 @@ import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
 import '../nisalka/emergency_dashboard.dart';
-import '../pulasthi/ctg_segment_screen.dart';
-import '../../models/pulasthi/assessment_data.dart';
 import './profile_screen.dart';
+import '../Malikshi/chatbot_screen.dart';
+import '../Malikshi/emotion_graph_screen.dart';
+import '../Malikshi/score_screen.dart';
+import '../Malikshi/suggestion_screen.dart';
+import '../Malikshi/summary_screen.dart';
+import '../Malikshi/trusted_person_screen.dart';
 
 class MainWrapper extends StatefulWidget {
-  final AssessmentData data;
-  const MainWrapper({super.key, required this.data});
+  final Widget? child;
+  final int selectedIndex;
+
+  const MainWrapper({
+    super.key,
+    this.child,
+    this.selectedIndex = 0,
+  });
 
   @override
   State<MainWrapper> createState() => _MainWrapperState();
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  int _selectedIndex = 0;
-
-  late final List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      const HomeScreen(),
-      const EmergencyDashboard(),
-      const ProfileScreen(),
-      // CTGSegmentScreen(data: widget.data),
-    ];
-  }
-
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+    if (index == widget.selectedIndex) return;
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/app/mother/chat');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/app/mother/emergency');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/app/mother/profile');
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: _pages[_selectedIndex],
+      body: widget.child ?? const Center(child: CircularProgressIndicator()),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -49,7 +56,7 @@ class _MainWrapperState extends State<MainWrapper> {
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           child: BottomNavigationBar(
-            currentIndex: _selectedIndex,
+            currentIndex: widget.selectedIndex,
             onTap: _onItemTapped,
             backgroundColor: Colors.white,
             selectedItemColor: const Color.fromARGB(255, 59, 1, 134),
@@ -63,7 +70,7 @@ class _MainWrapperState extends State<MainWrapper> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.medical_information),
                 activeIcon: GradientIcon(Icons.medical_information),
-                label: 'Training',
+                label: 'Emergency',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.woman),
