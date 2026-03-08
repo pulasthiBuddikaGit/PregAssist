@@ -17,6 +17,9 @@ dependencies:
   shared_preferences: ^2.2.2
   flutter_onnxruntime: ^1.6.1
   flutter_tts: ^4.2.5
+  camera: any
+  permission_handler: any
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:

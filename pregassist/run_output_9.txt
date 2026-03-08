@@ -1,0 +1,75 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...             23.2s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+Debug service listening on ws://127.0.0.1:55319/w9782IKTVg8=/ws
+A Dart VM Service on Chrome is available at: http://127.0.0.1:55319/w9782IKTVg8=
+The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:55319/w9782IKTVg8=/devtools/?uri=ws://127.0.0.1:55319/w9782IKTVg8=/ws
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → It's so lovely to connect with you and support you on your pregnancy journey. I'm here to listen and care for you in any way I can. How are you feeling today, what's the current mood that's been with you lately?
+CameraService: Failed to initialize camera: CameraException(CameraAccessDenied, The camera cannot be used or the permission to access the camera is not granted.)
+LlmService: HTTP 200
+LlmService: reply → I'm so sorry to hear that you're feeling sad, that can be really tough, especially during pregnancy when emotions can feel more intense. You're not alone and it's okay to feel this way. Are you feeling anxious about the birth or your baby's health, is that contributing to your sadness at all?
+LlmService: HTTP 200
+LlmService: reply → It can be really overwhelming to feel sad, and it's amazing that you're acknowledging and expressing your emotions. Sometimes it can be helpful to focus on the things that bring us joy, so I want to ask, what are some things that bring you joy and love when you think about your baby?
+LlmService: HTTP 200
+LlmService: reply → It's completely understandable to still be feeling sad, and I'm here to support you through these emotions. It can be really helpful to have a strong support system, so I want to ask, are you feeling supported by your family or partner during this time, or is that something that's been feeling a bit lacking for you?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → It's so lovely to connect with you and support you during this special time. I'm here to listen and care for your emotional wellbeing. How are you feeling today, dear one?
+CameraService: Front camera initialized successfully
+CameraService: Failed to delete temp file: Unsupported operation: _Namespace
+CameraService: Snapshot captured (23695 bytes, 31596 chars base64)
+LlmService: HTTP 200
+LlmService: reply → I can sense a mix of emotions in your message, and it's completely okay to feel both happy and sad at the same time. It takes a lot of courage to acknowledge and share your feelings. Are you feeling anxious about the birth of your baby or their health in any way?
+CameraService: Failed to delete temp file: Unsupported operation: _Namespace
+CameraService: Snapshot captured (23699 bytes, 31600 chars base64)
+LlmService: HTTP 200
+LlmService: reply → It's wonderful to hear that happiness is present for you right now, and I'm so glad you're feeling positive. Your joy is beautiful and will surely be a lovely energy for your baby to grow in. What kind of support are you receiving from your family or partner that's making you feel loved and cared for?
+CameraService: Failed to delete temp file: Unsupported operation: _Namespace
+CameraService: Snapshot captured (23853 bytes, 31804 chars base64)
+LlmService: HTTP 200
+LlmService: reply → I'm so sorry to hear that sadness has settled in, and I'm here to hold a gentle space for you. It can be really tough to navigate these emotions, especially during pregnancy. Are there any fears about motherhood that might be weighing on your heart right now?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Front camera initialized successfully
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I want you to know that I'm here to listen and support you in any way I can. I care about your emotional wellbeing, especially during this special time in your life. How are you feeling today, is everything going okay for you?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Front camera initialized successfully
+LlmService: HTTP 200
+LlmService: reply → It's so lovely to connect with you and support you during this special time. I'm here to listen and care for your emotional wellbeing. How are you feeling today, and what's been on your mind lately?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Front camera initialized successfully
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I want you to know that I'm here to listen and support you in any way I can. I care about how you're feeling, and I want to understand what's on your heart right now. How are you feeling today, in this moment, as you're expecting your little one?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I want you to know that you're safe and supported in our conversation. I care about how you're feeling, and I'm here to listen. How are you feeling today?
+CameraService: Front camera initialized successfully
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I'm honored to be a part of your journey. I want you to know that you're safe and supported in our conversation. How are you feeling today, in this moment, as you're expecting your little one?
+LlmService: HTTP 200
+LlmService: reply → It's so lovely to connect with you, and I'm here to support you every step of the way. I care about how you're feeling, and I want to understand what's on your heart. How are you feeling today?
+CameraService: Front camera initialized successfully
+CameraService: Front camera initialized successfully

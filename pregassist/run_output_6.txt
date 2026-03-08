@@ -1,0 +1,10 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/main.dart:229:30: Error: Not a constant expression.
+                      child: EmergencyDashboard(),
+                             ^^^^^^^^^^^^^^^^^^
+lib/main.dart:234:30: Error: Not a constant expression.
+                      child: ProfileScreen(),
+                             ^^^^^^^^^^^^^
+Waiting for connection from debug service on Chrome...             34.9s
+Failed to compile application.
