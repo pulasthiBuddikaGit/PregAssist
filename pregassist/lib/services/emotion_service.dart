@@ -18,7 +18,7 @@ class GenderBlockedResult {
 
 class EmotionService {
   // Use 10.0.2.2 for Android emulator, or your machine's IP for a physical device.
-  static const String baseUrl = 'http://127.0.0.1:5000';
+  static const String baseUrl = 'https://emotion-apps.azurewebsites.net';
 
   /// Normalize text-model labels → image-model labels for consistency.
   static String _normalize(String textEmotion) {
