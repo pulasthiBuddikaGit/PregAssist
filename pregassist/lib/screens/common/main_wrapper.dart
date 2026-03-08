@@ -24,27 +24,7 @@ class MainWrapper extends StatefulWidget {
   @override
   State<MainWrapper> createState() => _MainWrapperState();
 }
-
 class _MainWrapperState extends State<MainWrapper> {
-<<<<<<< HEAD
-=======
-  int _selectedIndex = 0;
-
-  late final List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      const HomeScreen(),
-      const DashboardScreen(),
-      const EmergencyDashboard(),
-      const ProfileScreen(),
-      // CTGSegmentScreen(data: widget.data),
-    ];
-  }
-
->>>>>>> main
   void _onItemTapped(int index) {
     if (index == widget.selectedIndex) return;
 
@@ -53,9 +33,12 @@ class _MainWrapperState extends State<MainWrapper> {
         Navigator.pushReplacementNamed(context, '/app/mother/chat');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/app/mother/emergency');
+        Navigator.pushReplacementNamed(context, '/app/mother/dashboard');
         break;
       case 2:
+        Navigator.pushReplacementNamed(context, '/app/mother/emergency');
+        break;
+      case 3:
         Navigator.pushReplacementNamed(context, '/app/mother/profile');
         break;
     }

@@ -188,7 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                   color: Colors.white,
                   image: const DecorationImage(
-                    image: AssetImage('assets/maternal_icon.png'),
+                    image: AssetImage('assets/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   boxShadow: [

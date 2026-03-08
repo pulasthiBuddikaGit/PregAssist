@@ -6,23 +6,18 @@
 
 #include "generated_plugin_registrant.h"
 
-<<<<<<< HEAD
-#include <permission_handler_windows/permission_handler_windows_plugin.h>
-#include <url_launcher_windows/url_launcher_windows.h>
-
-void RegisterPlugins(flutter::PluginRegistry* registry) {
-  PermissionHandlerWindowsPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
-  UrlLauncherWindowsRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
-=======
 #include <flutter_onnxruntime/flutter_onnxruntime_plugin.h>
 #include <flutter_tts/flutter_tts_plugin.h>
+#include <permission_handler_windows/permission_handler_windows_plugin.h>
+#include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   FlutterOnnxruntimePluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterOnnxruntimePlugin"));
   FlutterTtsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterTtsPlugin"));
->>>>>>> main
+  PermissionHandlerWindowsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }
