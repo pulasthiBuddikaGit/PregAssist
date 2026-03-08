@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../models/pulasthi/assessment_data.dart';
+import '../../services/ctg_counterfactual_service.dart';
 import '../../services/ctg_shadow_explainability_service.dart';
 import '../../services/fetal_onnx_service.dart';
 import 'ctg_segment_screen.dart';
@@ -23,8 +25,14 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   PredictionResult? _prediction;
   OnnxPrediction? _onnxPrediction;
   ShadowExplainabilityResult? _shadowExplanation;
+  CounterfactualSearchResult? _counterfactual;
   String? _explanationError;
+  String? _counterfactualError;
   bool _isLoading = false;
+  bool _isCounterfactualLoading = false;
+  bool _isExplanationSpeaking = false;
+  bool _isCounterfactualSpeaking = false;
+  late final FlutterTts _flutterTts;
 
   @override
   void initState() {
@@ -34,6 +42,34 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _mildDecelerations = widget.data.mildDecelerations;
     _severeDecelerations = widget.data.severeDecelerations;
     _prolongedDecelerations = widget.data.prolongedDecelerations;
+    _flutterTts = FlutterTts();
+    _flutterTts.setCompletionHandler(() {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
+    _flutterTts.setCancelHandler(() {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
+    _flutterTts.setErrorHandler((_) {
+      if (!mounted) return;
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
   }
 
   bool get _hasShadowMismatch {
@@ -133,6 +169,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       _onnxPrediction = null;
       _shadowExplanation = null;
       _explanationError = null;
+      _resetCounterfactualState();
     });
 
     try {
@@ -209,7 +246,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     );
   }
 
-  // âœ… UPDATED: Reset + navigate directly to CTGSegmentScreen
+  // Reset + navigate directly to CTGSegmentScreen
   void _handleReset() {
     // reset shared data
     widget.data.segmentDuration = null;
@@ -226,6 +263,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _onnxPrediction = null;
     _shadowExplanation = null;
     _explanationError = null;
+    _resetCounterfactualState();
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -287,7 +325,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                           'Baseline FHR:', '${widget.data.baselineFHR} bpm'),
                       _buildParameterRow(
                         'FHR Range:',
-                        '${widget.data.lowestFHR}â€“${widget.data.highestFHR} bpm',
+                        '${widget.data.lowestFHR}-${widget.data.highestFHR} bpm',
                       ),
                       _buildParameterRow('Accelerations:', '$_accelerations'),
                       _buildParameterRow(
@@ -385,6 +423,373 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
         ),
       ),
     );
+  }
+
+  void _resetCounterfactualState() {
+    _counterfactual = null;
+    _counterfactualError = null;
+    _isCounterfactualLoading = false;
+    _isExplanationSpeaking = false;
+    _isCounterfactualSpeaking = false;
+    _flutterTts.stop();
+  }
+
+  Future<void> _stopSpeech() async {
+    await _flutterTts.stop();
+    if (!mounted) return;
+    setState(() {
+      _isExplanationSpeaking = false;
+      _isCounterfactualSpeaking = false;
+    });
+  }
+
+  String _explanationSpeechText() {
+    final classLabel = _prediction?.label.split(' (').first ?? 'Unknown';
+    final reasons = _shadowExplanation?.keyFactors ??
+        _prediction?.reasons ??
+        const <String>[];
+    final cleanedReasons = reasons
+        .map(_speechFriendlyReason)
+        .where((reason) => reason.trim().isNotEmpty)
+        .toList();
+
+    final parts = <String>[
+      'The AI predicted $classLabel fetal status.',
+      if (cleanedReasons.isNotEmpty) 'Key reasons: ${cleanedReasons.join(' ')}',
+      if ((_shadowExplanation?.decisionSummary ?? '').isNotEmpty)
+        'Decision summary: ${_shadowExplanation!.decisionSummary}',
+    ];
+
+    return parts.join(' ');
+  }
+
+  String _speechFriendlyReason(String reason) {
+    var cleaned = reason.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+    cleaned = cleaned.replaceAll('present/increased', 'high');
+    cleaned = cleaned.replaceAll('limited', 'low');
+    cleaned = cleaned.replaceAll('lower', 'low');
+    cleaned = cleaned.replaceAll('higher', 'high');
+    cleaned = cleaned.replaceAll('wider', 'high');
+    cleaned = cleaned.replaceAll('narrower', 'low');
+    cleaned = cleaned.replaceAll('increased', 'high');
+    cleaned = cleaned.replaceAll('present', 'high');
+    cleaned = cleaned.trim();
+    if (cleaned.isEmpty) return '';
+    if (!cleaned.endsWith('.')) {
+      cleaned = '$cleaned.';
+    }
+    return cleaned;
+  }
+
+  Future<void> _toggleExplanationSpeech() async {
+    if (_prediction == null) return;
+
+    try {
+      if (_isExplanationSpeaking) {
+        await _stopSpeech();
+        return;
+      }
+
+      final speechText = _explanationSpeechText();
+      await _flutterTts.stop();
+      await _flutterTts.awaitSpeakCompletion(true);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0);
+
+      if (mounted) {
+        setState(() {
+          _isExplanationSpeaking = true;
+          _isCounterfactualSpeaking = false;
+        });
+      }
+
+      await _flutterTts.speak(speechText);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isExplanationSpeaking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speaker unavailable: $e')),
+      );
+    }
+  }
+
+  Future<void> _prepareCounterfactual() async {
+    if (_onnxPrediction == null || widget.data.segmentDuration == null) {
+      return;
+    }
+    if (_counterfactual != null) {
+      return;
+    }
+    if (_isCounterfactualLoading) {
+      return;
+    }
+
+    setState(() {
+      _isCounterfactualLoading = true;
+      _counterfactualError = null;
+    });
+
+    try {
+      final result = await CtgCounterfactualService.instance.search(
+        currentFeatures12: _buildFeatures12(),
+        currentClass: _onnxPrediction!.label,
+        segmentDurationMinutes: widget.data.segmentDuration!,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _counterfactual = result;
+        if (result == null) {
+          _counterfactualError = _onnxPrediction!.label == 1
+              ? 'This CTG is already in the best class. No step-up counterfactual is needed.'
+              : 'No nearby change was found that moves the ONNX model to the next better class.';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _counterfactualError = 'Counterfactual search failed: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isCounterfactualLoading = false);
+      }
+    }
+  }
+
+  Future<void> _toggleCounterfactualSpeech() async {
+    final result = _counterfactual;
+    if (result == null) return;
+
+    try {
+      if (_isCounterfactualSpeaking) {
+        await _stopSpeech();
+        return;
+      }
+
+      await _flutterTts.stop();
+      await _flutterTts.awaitSpeakCompletion(true);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0);
+
+      if (mounted) {
+        setState(() {
+          _isExplanationSpeaking = false;
+          _isCounterfactualSpeaking = true;
+        });
+      }
+
+      await _flutterTts.speak(result.speechText);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isCounterfactualSpeaking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speaker unavailable: $e')),
+      );
+    }
+  }
+
+  void _showCounterfactuals() {
+    final future = _prepareCounterfactual();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.72,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: FutureBuilder<void>(
+            future: future,
+            builder: (context, snapshot) => SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Counterfactuals',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'This search tests small nearby changes in baseline and event counts, then re-runs the main ONNX model to see whether the class improves.',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isCounterfactualLoading && _counterfactual == null) ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ] else if (_counterfactual != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _counterfactual!.summary,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E3A8A),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: _toggleCounterfactualSpeech,
+                                tooltip: _isCounterfactualSpeaking
+                                    ? 'Stop audio'
+                                    : 'Listen',
+                                icon: Icon(
+                                  _isCounterfactualSpeaking
+                                      ? Icons.stop_circle_outlined
+                                      : Icons.volume_up_outlined,
+                                  color: const Color(0xFF2B80FF),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Target class: ${_classLabel(_counterfactual!.currentClass)} -> ${_classLabel(_counterfactual!.targetClass)}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Suggested value changes',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._counterfactual!.adjustments.map(
+                      (adjustment) => Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Text(
+                          adjustment.instruction,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Suggested class confidence: ${((_counterfactual!.suggestedPrediction.confidence ?? 0) * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Text(
+                        _counterfactualError ??
+                            'Counterfactual suggestions are unavailable.',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2B80FF),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ).whenComplete(_stopSpeech);
+  }
+
+  String _classLabel(int cls) {
+    switch (cls) {
+      case 1:
+        return 'Normal';
+      case 2:
+        return 'Suspect';
+      case 3:
+        return 'Pathological';
+      default:
+        return 'Unknown';
+    }
   }
 
   Widget _buildParameterRow(String label, String value) {
@@ -488,7 +893,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        "Step 3 of 3 â€“ Events & Result",
+                        "Step 3 of 3 - Events & Result",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -523,7 +928,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                   setState(() => _accelerations = v),
                               label: 'Number of accelerations',
                               helperText:
-                                  'Episodes where FHR rises â‰¥15 bpm for â‰¥15 seconds.',
+                                  'Count clear accelerations where the fetal heart rate rises by at least 15 bpm for at least 15 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -542,7 +947,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                               label: 'Number of mild decelerations',
                               helperText: 'Shallow, short FHR drops.',
                               tooltip:
-                                  'Drop <30 bpm below baseline and <60 s duration.',
+                                  'Drop less than 30 bpm below baseline and shorter than 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -552,7 +957,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                               label: 'Number of severe decelerations',
                               helperText: 'Deeper or longer FHR drops.',
                               tooltip:
-                                  'Drop â‰¥30 bpm below baseline or â‰¥60 s duration.',
+                                  'Drop of at least 30 bpm below baseline or duration of at least 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -561,7 +966,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                   setState(() => _prolongedDecelerations = v),
                               label: 'Number of prolonged decelerations',
                               helperText:
-                                  'Decelerations lasting â‰¥2â€“3 minutes.',
+                                  'Count prolonged decelerations lasting 2 to 3 minutes or longer.',
                             ),
                           ],
                         ),
@@ -835,9 +1240,31 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             ),
           ],
           const SizedBox(height: 14),
-          Text(
-            'Why the AI predicted $classLabel',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Why the AI predicted $classLabel',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _toggleExplanationSpeech,
+                tooltip: _isExplanationSpeaking
+                    ? 'Stop audio'
+                    : 'Listen to explanation',
+                icon: Icon(
+                  _isExplanationSpeaking
+                      ? Icons.stop_circle_outlined
+                      : Icons.volume_up_outlined,
+                  color: const Color(0xFF2B80FF),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           ...(explanation?.keyFactors.isNotEmpty ?? false
@@ -903,21 +1330,33 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             ),
           ],
           const SizedBox(height: 10),
-          const Text(
-            'Note: The explanation is generated offline using a simplified interpretable model that approximates the main AI model.',
-            style: TextStyle(fontSize: 12, color: Colors.black54),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: _showDetailedExplanation,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF2B80FF),
-              padding: EdgeInsets.zero,
-            ),
-            child: const Text(
-              'View detailed explanation',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+          Wrap(
+            spacing: 18,
+            runSpacing: 8,
+            children: [
+              TextButton(
+                onPressed: _showDetailedExplanation,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2B80FF),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text(
+                  'View detailed explanation',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+              TextButton(
+                onPressed: _showCounterfactuals,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2B80FF),
+                  padding: EdgeInsets.zero,
+                ),
+                child: const Text(
+                  'Counterfactuals',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
         ],
       ),
