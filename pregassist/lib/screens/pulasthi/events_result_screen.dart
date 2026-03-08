@@ -30,6 +30,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   String? _counterfactualError;
   bool _isLoading = false;
   bool _isCounterfactualLoading = false;
+  bool _isExplanationSpeaking = false;
   bool _isCounterfactualSpeaking = false;
   late final FlutterTts _flutterTts;
 
@@ -44,15 +45,24 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _flutterTts = FlutterTts();
     _flutterTts.setCompletionHandler(() {
       if (!mounted) return;
-      setState(() => _isCounterfactualSpeaking = false);
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
     });
     _flutterTts.setCancelHandler(() {
       if (!mounted) return;
-      setState(() => _isCounterfactualSpeaking = false);
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
     });
     _flutterTts.setErrorHandler((_) {
       if (!mounted) return;
-      setState(() => _isCounterfactualSpeaking = false);
+      setState(() {
+        _isExplanationSpeaking = false;
+        _isCounterfactualSpeaking = false;
+      });
     });
   }
 
@@ -236,7 +246,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     );
   }
 
-  // âœ… UPDATED: Reset + navigate directly to CTGSegmentScreen
+  // Reset + navigate directly to CTGSegmentScreen
   void _handleReset() {
     // reset shared data
     widget.data.segmentDuration = null;
@@ -315,7 +325,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                           'Baseline FHR:', '${widget.data.baselineFHR} bpm'),
                       _buildParameterRow(
                         'FHR Range:',
-                        '${widget.data.lowestFHR}â€“${widget.data.highestFHR} bpm',
+                        '${widget.data.lowestFHR}-${widget.data.highestFHR} bpm',
                       ),
                       _buildParameterRow('Accelerations:', '$_accelerations'),
                       _buildParameterRow(
@@ -419,8 +429,89 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     _counterfactual = null;
     _counterfactualError = null;
     _isCounterfactualLoading = false;
+    _isExplanationSpeaking = false;
     _isCounterfactualSpeaking = false;
     _flutterTts.stop();
+  }
+
+  Future<void> _stopSpeech() async {
+    await _flutterTts.stop();
+    if (!mounted) return;
+    setState(() {
+      _isExplanationSpeaking = false;
+      _isCounterfactualSpeaking = false;
+    });
+  }
+
+  String _explanationSpeechText() {
+    final classLabel = _prediction?.label.split(' (').first ?? 'Unknown';
+    final reasons = _shadowExplanation?.keyFactors ??
+        _prediction?.reasons ??
+        const <String>[];
+    final cleanedReasons = reasons
+        .map(_speechFriendlyReason)
+        .where((reason) => reason.trim().isNotEmpty)
+        .toList();
+
+    final parts = <String>[
+      'The AI predicted $classLabel fetal status.',
+      if (cleanedReasons.isNotEmpty) 'Key reasons: ${cleanedReasons.join(' ')}',
+      if ((_shadowExplanation?.decisionSummary ?? '').isNotEmpty)
+        'Decision summary: ${_shadowExplanation!.decisionSummary}',
+    ];
+
+    return parts.join(' ');
+  }
+
+  String _speechFriendlyReason(String reason) {
+    var cleaned = reason.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+    cleaned = cleaned.replaceAll('present/increased', 'high');
+    cleaned = cleaned.replaceAll('limited', 'low');
+    cleaned = cleaned.replaceAll('lower', 'low');
+    cleaned = cleaned.replaceAll('higher', 'high');
+    cleaned = cleaned.replaceAll('wider', 'high');
+    cleaned = cleaned.replaceAll('narrower', 'low');
+    cleaned = cleaned.replaceAll('increased', 'high');
+    cleaned = cleaned.replaceAll('present', 'high');
+    cleaned = cleaned.trim();
+    if (cleaned.isEmpty) return '';
+    if (!cleaned.endsWith('.')) {
+      cleaned = '$cleaned.';
+    }
+    return cleaned;
+  }
+
+  Future<void> _toggleExplanationSpeech() async {
+    if (_prediction == null) return;
+
+    try {
+      if (_isExplanationSpeaking) {
+        await _stopSpeech();
+        return;
+      }
+
+      final speechText = _explanationSpeechText();
+      await _flutterTts.stop();
+      await _flutterTts.awaitSpeakCompletion(true);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0);
+
+      if (mounted) {
+        setState(() {
+          _isExplanationSpeaking = true;
+          _isCounterfactualSpeaking = false;
+        });
+      }
+
+      await _flutterTts.speak(speechText);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isExplanationSpeaking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speaker unavailable: $e')),
+      );
+    }
   }
 
   Future<void> _prepareCounterfactual() async {
@@ -474,10 +565,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
 
     try {
       if (_isCounterfactualSpeaking) {
-        await _flutterTts.stop();
-        if (mounted) {
-          setState(() => _isCounterfactualSpeaking = false);
-        }
+        await _stopSpeech();
         return;
       }
 
@@ -488,7 +576,10 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       await _flutterTts.setVolume(1.0);
 
       if (mounted) {
-        setState(() => _isCounterfactualSpeaking = true);
+        setState(() {
+          _isExplanationSpeaking = false;
+          _isCounterfactualSpeaking = true;
+        });
       }
 
       await _flutterTts.speak(result.speechText);
@@ -685,12 +776,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           ),
         ),
       ),
-    ).whenComplete(() {
-      _flutterTts.stop();
-      if (mounted) {
-        setState(() => _isCounterfactualSpeaking = false);
-      }
-    });
+    ).whenComplete(_stopSpeech);
   }
 
   String _classLabel(int cls) {
@@ -807,7 +893,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        "Step 3 of 3 â€“ Events & Result",
+                        "Step 3 of 3 - Events & Result",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -842,7 +928,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                   setState(() => _accelerations = v),
                               label: 'Number of accelerations',
                               helperText:
-                                  'Episodes where FHR rises â‰¥15 bpm for â‰¥15 seconds.',
+                                  'Count clear accelerations where the fetal heart rate rises by at least 15 bpm for at least 15 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -861,7 +947,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                               label: 'Number of mild decelerations',
                               helperText: 'Shallow, short FHR drops.',
                               tooltip:
-                                  'Drop <30 bpm below baseline and <60 s duration.',
+                                  'Drop less than 30 bpm below baseline and shorter than 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -871,7 +957,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                               label: 'Number of severe decelerations',
                               helperText: 'Deeper or longer FHR drops.',
                               tooltip:
-                                  'Drop â‰¥30 bpm below baseline or â‰¥60 s duration.',
+                                  'Drop of at least 30 bpm below baseline or duration of at least 60 seconds.',
                             ),
                             const SizedBox(height: 16),
                             _buildStepperInput(
@@ -880,7 +966,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                                   setState(() => _prolongedDecelerations = v),
                               label: 'Number of prolonged decelerations',
                               helperText:
-                                  'Decelerations lasting â‰¥2â€“3 minutes.',
+                                  'Count prolonged decelerations lasting 2 to 3 minutes or longer.',
                             ),
                           ],
                         ),
@@ -1154,9 +1240,31 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             ),
           ],
           const SizedBox(height: 14),
-          Text(
-            'Why the AI predicted $classLabel',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Why the AI predicted $classLabel',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _toggleExplanationSpeech,
+                tooltip: _isExplanationSpeaking
+                    ? 'Stop audio'
+                    : 'Listen to explanation',
+                icon: Icon(
+                  _isExplanationSpeaking
+                      ? Icons.stop_circle_outlined
+                      : Icons.volume_up_outlined,
+                  color: const Color(0xFF2B80FF),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           ...(explanation?.keyFactors.isNotEmpty ?? false
@@ -1221,11 +1329,6 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
               style: const TextStyle(fontSize: 13, color: Colors.black54),
             ),
           ],
-          const SizedBox(height: 10),
-          const Text(
-            'Note: The explanation is generated offline using a simplified interpretable model that approximates the main AI model.',
-            style: TextStyle(fontSize: 12, color: Colors.black54),
-          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 18,
