@@ -24,6 +24,7 @@ import 'screens/Malikshi/suggestion_screen.dart';
 import 'screens/Malikshi/summary_screen.dart';
 import 'screens/Malikshi/trusted_person_screen.dart';
 import 'screens/common/home_screen.dart';
+import 'screens/common/dashboard_screen.dart';
 import 'screens/common/profile_screen.dart';
 import 'screens/nisalka/emergency_dashboard.dart';
 import 'services/malikshi_data_service.dart';
@@ -155,6 +156,13 @@ class _MyAppState extends State<MyApp> {
                 // ✅ Allowed -> return actual protected screen
                 switch (name) {
                   case '/app/mother':
+                  case '/app/mother/home':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: HomeScreen(
+                        onStartChat: () => Navigator.pushNamed(context, '/app/mother/chat'),
+                      ),
+                    );
                   case '/app/mother/chat':
                     return MainWrapper(
                       selectedIndex: 0,
@@ -163,15 +171,13 @@ class _MyAppState extends State<MyApp> {
                           malikshiData.currentRecords = records;
                           Navigator.pushNamed(context, '/app/mother/graph');
                         },
-                        onBack: () => Navigator.pushNamed(context, '/app/mother/dashboard'),
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/home'),
                       ),
                     );
                   case '/app/mother/dashboard':
                     return MainWrapper(
-                      selectedIndex: 0,
-                      child: HomeScreen(
-                        onStartChat: () => Navigator.pushNamed(context, '/app/mother/chat'),
-                      ),
+                      selectedIndex: 1,
+                      child: const DashboardScreen(),
                     );
                   case '/app/mother/graph':
                     return MainWrapper(
@@ -227,12 +233,12 @@ class _MyAppState extends State<MyApp> {
                     );
                   case '/app/mother/emergency':
                     return MainWrapper(
-                      selectedIndex: 1,
+                      selectedIndex: 2,
                       child: EmergencyDashboard(),
                     );
                   case '/app/mother/profile':
                     return MainWrapper(
-                      selectedIndex: 2,
+                      selectedIndex: 3,
                       child: ProfileScreen(),
                     );
                   case '/app/doctor':

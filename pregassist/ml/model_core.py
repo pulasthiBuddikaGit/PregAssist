@@ -1,171 +1,335 @@
 import pandas as pd
 import numpy as np
-import joblib
 import shap
+import json
 import matplotlib.pyplot as plt
 import seaborn as sns
-import json
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix
 from xgboost import XGBClassifier, plot_importance
 
-# 1. LOAD DATA
+# 1 LOAD DATASET
+
 try:
-    df = pd.read_csv('maternal_health_data.csv')
+    df = pd.read_csv("maternal_health_data.csv")
     df.columns = df.columns.str.strip()
     print("Dataset loaded successfully!")
 except Exception as e:
-    print(f"Error loading CSV: {e}")
+    print("Dataset loading error:", e)
 
-# 2. PRE-PROCESSING
-risk_mapping_names = {0: 'low risk', 1: 'mid risk', 2: 'high risk'}
-df['RiskLevel'] = df['RiskLevel'].map({'low risk': 0, 'mid risk': 1, 'high risk': 2})
+# 2 PREPROCESSING
 
-feature_cols = ['Age', 'SystolicBP', 'DiastolicBP', 'BS', 'BodyTemp', 'HeartRate']
+risk_mapping_names = {
+    0: "low risk",
+    1: "mid risk",
+    2: "high risk"
+}
+
+df["RiskLevel"] = df["RiskLevel"].map({
+    "low risk": 0,
+    "mid risk": 1,
+    "high risk": 2
+})
+
+feature_cols = [
+    "Age",
+    "SystolicBP",
+    "DiastolicBP",
+    "BS",
+    "BodyTemp",
+    "HeartRate"
+]
+
 X = df[feature_cols]
-y = df['RiskLevel']
+y = df["RiskLevel"]
 
-# 3. TRAIN XGBOOST
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# 3 TRAIN MODEL
 
-rf_model = XGBClassifier(
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    stratify=y,
+    random_state=42
+)
+
+model = XGBClassifier(
     n_estimators=1200,
     learning_rate=0.05,
     max_depth=10,
     subsample=0.9,
     colsample_bytree=0.9,
     random_state=42,
-    eval_metric='mlogloss'
+    eval_metric="mlogloss"
 )
-rf_model.fit(X_train, y_train)
 
-# 4. INITIALIZE SHAP
-explainer = shap.TreeExplainer(rf_model)
+model.fit(X_train, y_train)
 
-# 5. CORE ANALYSIS FUNCTION (Updated with Trimester Logic)
-def analyze_maternal_health(input_list, trimester=1):
-    data_df = pd.DataFrame([input_list], columns=feature_cols)
-    
-    # Prediction
-    risk_code = int(rf_model.predict(data_df)[0])
-    risk_name = risk_mapping_names[risk_code]
-    
-    probs = rf_model.predict_proba(data_df)[0]
-    confidence = float(np.max(probs) * 100)
-    
-    # SHAP logic
-    shap_values = explainer.shap_values(data_df)
-    if len(shap_values.shape) == 3:
-        impacts = shap_values[0, :, risk_code]
-    else:
-        impacts = shap_values[0]
-    shap_data = sorted(zip(feature_cols, impacts), key=lambda x: x[1], reverse=True)
-    
-    # --- DETAILED MEDICAL GUIDELINES ---
+print("Model trained successfully")
+
+# 4 SHAP EXPLAINER
+
+explainer = shap.TreeExplainer(model)
+
+
+# UNIT CONVERSION FUNCTIONS
+
+def celsius_to_fahrenheit(c):
+    return (c * 9/5) + 32
+
+
+def mgdl_to_mmol(value):
+    return value / 18
+
+
+
+# CORE PREDICTION FUNCTION
+
+
+def analyze_maternal_health(input_list,
+                            trimester=1,
+                            temp_unit="C",
+                            sugar_unit="mmol"):
+
     age, sbp, dbp, bs, temp, hr = input_list
+
+    # Convert temperature if Celsius
+    if temp_unit == "C":
+        temp = celsius_to_fahrenheit(temp)
+
+    # Convert sugar if mg/dL
+    if sugar_unit == "mgdl":
+        bs = mgdl_to_mmol(bs)
+
+    processed_input = [age, sbp, dbp, bs, temp, hr]
+
+    data_df = pd.DataFrame(
+        [processed_input],
+        columns=feature_cols
+    )
+   
+    # MODEL PREDICTION
+
+
+    risk_code = int(model.predict(data_df)[0])
+    risk_name = risk_mapping_names[risk_code]
+
+    probabilities = model.predict_proba(data_df)[0]
+
+    confidence = float(np.max(probabilities) * 100)
+
+    # SAFETY OVERRIDE RULES
+
+    if sbp >= 180 or dbp >= 120:
+        risk_code = 2
+        risk_name = "high risk"
+
+    if hr >= 140:
+        risk_code = 2
+        risk_name = "high risk"
+
+    if temp >= 101:
+        risk_code = 2
+        risk_name = "high risk"
+
+    if bs >= 11:
+        risk_code = 2
+        risk_name = "high risk"
+   
+    # SHAP ANALYSIS
+    
+    shap_values = explainer(data_df)
+
+    if len(shap_values.values.shape) == 3:
+        impacts = shap_values.values[0, :, risk_code]
+    else:
+        impacts = shap_values.values[0]
+
+    shap_data = [(feature_cols[i], float(impacts[i])) for i in range(len(feature_cols))]
+
+    shap_data = sorted(
+        shap_data,
+        key=lambda x: abs(x[1]),
+        reverse=True
+    )
+   
+    # MEDICAL GUIDELINES
+    
     advice = []
+    abnormal_found = False
 
-    # A. Trimester-Specific Context 
+    # Trimester context
     if trimester == 1:
-        advice.append("Trimester 1: Focus on Folic Acid intake and manage early fatigue with rest.")
+        advice.append(
+            "Trimester 1: Focus on folic acid intake and adequate rest."
+        )
+
     elif trimester == 2:
-        advice.append("Trimester 2: Monitor for baby's movements and ensure calcium-rich nutrition.")
+        advice.append(
+            "Trimester 2: Monitor fetal movement and maintain calcium intake."
+        )
+
     elif trimester == 3:
-        advice.append("Trimester 3: Practice kick counting and watch for sudden swelling in hands or face.")
-    
-    # B. Blood Pressure Check
-    if sbp > 140 or dbp > 90: 
+        advice.append(
+            "Trimester 3: Practice kick counting and monitor swelling."
+        )
+
+    # Blood pressure
+    if sbp > 140 or dbp > 90:
+        abnormal_found = True
+
         if trimester == 3:
-            advice.append("🚨 3rd Trimester Alert: High BP may indicate Pre-eclampsia. Please consult your doctor immediately.")
+            advice.append(
+                "High BP in third trimester may indicate preeclampsia. Consult your doctor immediately."
+            )
         else:
-            advice.append("Hypertension detected: Reduce salt intake and rest on your left side.")
+            advice.append(
+                "Hypertension detected. Reduce salt intake and rest on left side."
+            )
+
     elif sbp < 90 or dbp < 60:
-        advice.append("Hypotension detected: Increase hydration and move slowly to avoid dizziness.")
+        abnormal_found = True
+        advice.append(
+            "Low blood pressure detected. Increase hydration and stand slowly."
+        )
 
-    # C. Blood Sugar Check
-    if bs > 7.8: 
-        advice.append("Elevated Blood Sugar: Focus on low-glycemic foods and consistent walking.")
+    # Blood sugar
+    if bs > 7.8:
+        abnormal_found = True
+        advice.append(
+            "Elevated blood sugar detected. Follow a low glycemic diet and maintain light physical activity."
+        )
+
     elif bs < 3.9:
-        advice.append("Hypoglycemia detected: Consume a small natural sugar snack immediately and rest.")
+        abnormal_found = True
+        advice.append(
+            "Low blood sugar detected. Consume a healthy snack immediately."
+        )
 
-    # D. Body Temperature & Heart Rate
-    if temp > 100.4: 
-        advice.append("Fever Warning: This may indicate an infection; contact your clinic.")
-    elif temp < 95.0:
-        advice.append("Low Body Temperature: Keep warm and monitor for lethargy.")
+    # Temperature
+    if temp > 100.4:
+        abnormal_found = True
+        advice.append(
+            "Fever detected. Possible infection. Please contact your healthcare provider."
+        )
 
-    if hr > 100: 
-        advice.append("Tachycardia: Avoid caffeine and practice deep breathing techniques.")
+    elif temp < 95:
+        abnormal_found = True
+        advice.append(
+            "Low body temperature detected. Keep warm and monitor symptoms."
+        )
+
+    # Heart rate
+    if hr > 100:
+        abnormal_found = True
+        advice.append(
+            "High heart rate detected. Avoid caffeine and practice deep breathing."
+        )
+
     elif hr < 60:
-        advice.append("Bradycardia detected: If you feel dizzy, please consult your doctor.")
+        abnormal_found = True
+        advice.append(
+            "Low heart rate detected. Consult your doctor if dizziness occurs."
+        )
 
-    # E. Age logic
-    if age > 35: 
-        advice.append("Advanced Maternal Age: Regular monitoring for gestational risks is advised.")
+    # Age
+    if age > 35:
+        abnormal_found = True
+        advice.append(
+            "Advanced maternal age. Regular monitoring is recommended."
+        )
+
     elif age < 18:
-        advice.append("Adolescent Pregnancy: Focus on high-calcium and iron-rich nutrition.")
+        abnormal_found = True
+        advice.append(
+            "Adolescent pregnancy. Ensure proper nutrition and regular checkups."
+        )
 
-    if not advice:
-        advice.append("Vitals appear stable. Continue your routine prenatal checkups.")
+    # Safe range advice
+    if not abnormal_found and risk_code != 2:
+        advice.append(
+            "Your current vitals appear to be within a safe range. Continue regular prenatal checkups, healthy meals, hydration, and adequate rest."
+        )
+
+    # Emergency rule
+    if risk_code == 2:
+        advice.append(
+            "Emergency: High pregnancy risk detected. Seek medical attention immediately."
+        )
+
     
-    if risk_code == 2: 
-        advice.append("🚨 EMERGENCY: High Risk detected. Seek immediate medical attention.")
-    
+    # RETURN RESULT
+
     return {
         "risk_level": risk_code,
         "risk_name": risk_name,
-        "percentage": round(confidence, 2),
+        "confidence_percentage": round(confidence, 2),
         "top_contributor": shap_data[0][0],
         "importance": {k: float(v) for k, v in shap_data},
         "advice": advice
     }
 
-# --- 6. TEST RUN ---
+
+# TEST RUN
+
 if __name__ == "__main__":
-    # Performance Check
-    y_pred = rf_model.predict(X_test)
+
+    y_pred = model.predict(X_test)
+
     accuracy = accuracy_score(y_test, y_pred)
-    print(f"\n--- MODEL PERFORMANCE ---")
-    print(f"Total Accuracy: {accuracy * 100:.2f}%")
 
-    # A. Confusion Matrix Graph (Accuracy Visual)
-    plt.figure(figsize=(8, 6))
+    print("\nModel Accuracy:", round(accuracy * 100, 2), "%")
+
+    # Confusion Matrix
+
     cm = confusion_matrix(y_test, y_pred)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='RdPu', 
-                xticklabels=['Low', 'Mid', 'High'], 
-                yticklabels=['Low', 'Mid', 'High'])
-    plt.title(f"Model Accuracy Visualization ({accuracy*100:.2f}%)")
-    plt.ylabel('Actual Risk')
-    plt.xlabel('Predicted Risk')
-    plt.savefig('accuracy_confusion_matrix.png')
+
+    plt.figure(figsize=(8,6))
+
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="RdPu",
+        xticklabels=["Low","Mid","High"],
+        yticklabels=["Low","Mid","High"]
+    )
+
+    plt.title("Model Confusion Matrix")
+
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+
     plt.show()
 
-    # B. Feature Importance Graph 
-    plt.figure(figsize=(10, 6))
-    plot_importance(rf_model, color='pink')
-    plt.title("XGBoost: Maternal Risk Factor Importance")
-    plt.savefig('feature_importance.png')
+    # Feature Importance
+
+    plt.figure(figsize=(10,6))
+
+    plot_importance(model)
+
+    plt.title("XGBoost Feature Importance")
+
     plt.show()
 
-    # C. Sample Test Run
-    sample_patient = [25, 145, 95, 7.0, 98.6, 80] 
-    print("\n--- TEST RUN OUTPUT (Trimester 3) ---")
-    test_result = analyze_maternal_health(sample_patient, trimester=3)
-    
-    print(json.dumps(test_result, indent=4))
+    # Sample prediction
 
-    # --- SHAP WATERFALL PLOT  ---
+    sample_patient = [
+        38,
+        200,
+        100,
+        5,
+        37,     # Celsius input
+        200
+    ]
 
-    sample_df = pd.DataFrame([sample_patient], columns=feature_cols)
+    result = analyze_maternal_health(
+        sample_patient,
+        trimester=3,
+        temp_unit="C"
+    )
 
-    predicted_class = int(rf_model.predict(sample_df)[0])
+    print("\nPrediction Result:\n")
 
-    shap_values = explainer(sample_df)
-
-    
-    shap_exp = shap_values[0, :, predicted_class]
-
-    shap.plots.waterfall(shap_exp)
-
-    shap.plots.waterfall(shap_exp, show=False)
-    plt.savefig("shap_waterfall_sample_patient.png", bbox_inches="tight")
+    print(json.dumps(result, indent=4))
