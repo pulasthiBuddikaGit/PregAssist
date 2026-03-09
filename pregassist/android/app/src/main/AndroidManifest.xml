@@ -2,6 +2,7 @@
     <queries>
         <package android:name="com.pregassist.ar" />
     </queries>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Mathru"
         android:name="${applicationName}"
