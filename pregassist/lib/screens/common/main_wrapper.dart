@@ -30,7 +30,7 @@ class _MainWrapperState extends State<MainWrapper> {
 
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(context, '/app/mother/chat');
+        Navigator.pushReplacementNamed(context, '/app/mother/home');
         break;
       case 1:
         Navigator.pushReplacementNamed(context, '/app/mother/dashboard');
