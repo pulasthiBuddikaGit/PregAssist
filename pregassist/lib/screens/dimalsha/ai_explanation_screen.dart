@@ -98,9 +98,9 @@ class AiExplanationScreen extends StatelessWidget {
               SizedBox(height: 15),
 
               Expanded(
-                flex: 3, // Graph takes 60% of remaining space
+                flex: 3, 
                 child: RotatedBox(
-                  quarterTurns: 1, // Rotate 90 degrees to make it horizontal
+                  quarterTurns: 1, 
                   child: Container(
                     padding: EdgeInsets.fromLTRB(10, 20, 20, 10),
                     decoration: BoxDecoration(
@@ -193,7 +193,7 @@ class AiExplanationScreen extends StatelessWidget {
               SizedBox(height: 10),
               
               Expanded(
-                flex: 2, // List takes 40% of remaining space
+                flex: 2, 
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [

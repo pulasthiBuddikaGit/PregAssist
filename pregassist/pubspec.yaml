@@ -7,15 +7,16 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  android_intent_plus: ^6.0.0
-  # device_apps: ^2.2.0
-  external_app_launcher: ^4.0.3
-  fl_chart: ^0.68.0
   flutter:
     sdk: flutter
-  http: ^1.2.0
+
+  android_intent_plus: ^6.0.0
+  external_app_launcher: ^4.0.3
+  http: ^1.2.2
   shared_preferences: ^2.2.2
+  fl_chart: ^0.68.0
   flutter_onnxruntime: ^1.6.1
+  carousel_slider: ^5.0.0
 
 dev_dependencies:
   flutter_test:
