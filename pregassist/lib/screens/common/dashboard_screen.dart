@@ -187,6 +187,269 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+          ),
+        ),
+        leadingWidth: 70,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12.0),
+          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+        ),
+        title: const Padding(
+          padding: EdgeInsets.only(left: 10.0), 
+          child: Text(
+            "Maternal Dashboard",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFDEEF4), Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 120, 20, 120), 
+          child: Column(
+            children: [
+              Container(
+                height: 150, 
+                width: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  image: const DecorationImage(
+                    image: AssetImage('assets/logo.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.pink.withOpacity(0.2),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Colors.pinkAccent.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Trimester Dropdown
+              _buildTrimesterDropdown(),
+              const SizedBox(height: 15),
+
+              _buildInputCard("Age", controllers["Age"]!, Icons.person),
+              const SizedBox(height: 15),
+              _buildInputCard(
+                "Systolic BP",
+                controllers["SystolicBP"]!,
+                Icons.favorite,
+              ),
+              const SizedBox(height: 15),
+              _buildInputCard(
+                "Diastolic BP",
+                controllers["DiastolicBP"]!,
+                Icons.favorite_border,
+              ),
+              const SizedBox(height: 15),
+              _buildInputCard(
+                "Blood Sugar (mmol/L)",
+                controllers["BS"]!,
+                Icons.water_drop,
+              ),
+              const SizedBox(height: 15),
+              _buildInputCard(
+                "Body Temp (°F)",
+                controllers["BodyTemp"]!,
+                Icons.thermostat,
+              ),
+              const SizedBox(height: 15),
+              _buildInputCard(
+                "Heart Rate",
+                controllers["HeartRate"]!,
+                Icons.monitor_heart,
+              ),
+              
+              const SizedBox(height: 30),
+
+              Container(
+                width: double.infinity,
+                height: 55,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.pinkAccent, Colors.pink],
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.pink.withOpacity(0.4),
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  onPressed: analyzeHealth,
+                  child: Text(
+                    isLoading ? "Analyzing..." : "Analyze Health",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputCard(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.pinkAccent.withOpacity(0.08),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.pinkAccent.withOpacity(0.1)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2D3748),
+        ),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: label,
+          // 1. Initial State (Inside box): Ash/Grey
+          labelStyle: TextStyle(
+            color: Colors.grey[500], // Ash Color
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          // 2. Floated State: Pink Color (Matching Analyze Button)
+          floatingLabelStyle: const TextStyle(
+            color: Colors.pinkAccent, 
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, size: 20, color: Colors.pinkAccent),
+          prefixIconConstraints: const BoxConstraints(minWidth: 30),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          contentPadding: const EdgeInsets.only(bottom: 4, top: 4), 
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrimesterDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.pinkAccent.withOpacity(0.08),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.pinkAccent.withOpacity(0.1)),
+      ),
+      child: DropdownButtonFormField<int>(
+        value: selectedTrimester,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: "Trimester",
+          labelStyle: TextStyle(
+            color: Colors.grey[500],
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          floatingLabelStyle: const TextStyle(
+            color: Colors.pinkAccent, 
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(Icons.calendar_today, size: 20, color: Colors.pinkAccent),
+          prefixIconConstraints: const BoxConstraints(minWidth: 30),
+          contentPadding: const EdgeInsets.only(bottom: 4, top: 4),
+          isDense: true,
+        ),
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.pinkAccent),
+        items: [1, 2, 3].map((int val) {
+          return DropdownMenuItem<int>(
+            value: val,
+            child: Text(
+              "Trimester $val",
+              style: const TextStyle(
+                fontSize: 13, 
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (int? newValue) {
+          setState(() {
+            selectedTrimester = newValue!;
+          });
+        },
+      ),
+    );
+  }
+
   void _showResultPopup() {
     showDialog(
       context: context,

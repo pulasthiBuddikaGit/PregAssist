@@ -17,6 +17,17 @@ import 'screens/public/login_screen.dart';
 // New doctor area (placeholder screen below)
 import 'screens/pulasthi/doctor_panel_screen.dart';
 
+import 'screens/Malikshi/chatbot_screen.dart';
+import 'screens/Malikshi/emotion_graph_screen.dart';
+import 'screens/Malikshi/score_screen.dart';
+import 'screens/Malikshi/suggestion_screen.dart';
+import 'screens/Malikshi/summary_screen.dart';
+import 'screens/Malikshi/trusted_person_screen.dart';
+import 'screens/common/home_screen.dart';
+import 'screens/common/profile_screen.dart';
+import 'screens/nisalka/emergency_dashboard.dart';
+import 'services/malikshi_data_service.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -139,10 +150,91 @@ class _MyAppState extends State<MyApp> {
                   return const _Splash();
                 }
 
+                final malikshiData = MalikshiDataService();
+
                 // ✅ Allowed -> return actual protected screen
                 switch (name) {
                   case '/app/mother':
-                    return MainWrapper(data: _assessmentData); // mother area shell
+                  case '/app/mother/chat':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: ChatbotScreen(
+                        onComplete: (records) {
+                          malikshiData.currentRecords = records;
+                          Navigator.pushNamed(context, '/app/mother/graph');
+                        },
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/dashboard'),
+                      ),
+                    );
+                  case '/app/mother/dashboard':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: HomeScreen(
+                        onStartChat: () => Navigator.pushNamed(context, '/app/mother/chat'),
+                      ),
+                    );
+                  case '/app/mother/graph':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: EmotionGraphScreen(
+                        emotionRecords: malikshiData.currentRecords,
+                        onStartNew: () => Navigator.pushNamed(context, '/app/mother/chat'),
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/chat'),
+                        onViewExercises: () => Navigator.pushNamed(context, '/app/mother/score'),
+                        onAlertTrustedPerson: () => Navigator.pushNamed(context, '/app/mother/trusted'),
+                      ),
+                    );
+                  case '/app/mother/trusted':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: TrustedPersonScreen(
+                        onContinue: () => Navigator.pushNamed(context, '/app/mother/graph'),
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/graph'),
+                      ),
+                    );
+                  case '/app/mother/score':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: ScoreScreen(
+                        score: malikshiData.calculateScore(),
+                        onContinue: () {
+                          final score = malikshiData.calculateScore();
+                          if (score < 60) {
+                            Navigator.pushNamed(context, '/app/mother/suggestions');
+                          } else {
+                            Navigator.pushNamed(context, '/app/mother/summary');
+                          }
+                        },
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/graph'),
+                      ),
+                    );
+                  case '/app/mother/suggestions':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: SuggestionScreen(
+                        onContinue: () => Navigator.pushNamed(context, '/app/mother/summary'),
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/score'),
+                      ),
+                    );
+                  case '/app/mother/summary':
+                    return MainWrapper(
+                      selectedIndex: 0,
+                      child: SummaryScreen(
+                        score: malikshiData.calculateScore(),
+                        onStartNew: () => Navigator.pushNamed(context, '/app/mother/chat'),
+                        onBack: () => Navigator.pushNamed(context, '/app/mother/suggestions'),
+                      ),
+                    );
+                  case '/app/mother/emergency':
+                    return MainWrapper(
+                      selectedIndex: 1,
+                      child: EmergencyDashboard(),
+                    );
+                  case '/app/mother/profile':
+                    return MainWrapper(
+                      selectedIndex: 2,
+                      child: ProfileScreen(),
+                    );
                   case '/app/doctor':
                     return const DoctorPanelScreen();
                   case '/app/doctor/ctg':

@@ -1,0 +1,42 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...             28.1s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+Debug service listening on ws://127.0.0.1:64193/I53M1epCuMI=/ws
+A Dart VM Service on Chrome is available at: http://127.0.0.1:64193/I53M1epCuMI=
+The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:64193/I53M1epCuMI=/devtools/?uri=ws://127.0.0.1:64193/I53M1epCuMI=/ws
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → It's so lovely to connect with you, I'm here to listen and support you in any way I can. I want you to know that you're not alone and everything you share is safe and welcome. How are you feeling today, what's the first emotion that comes to mind?
+CameraService: Front camera initialized successfully
+EmotionService: detectTextEmotion failed: ClientException: Failed to fetch, uri=http://127.0.0.1:5000/detect_text
+CameraService: Failed to capture snapshot: CameraException(Previous capture has not returned yet., takePicture was called before the previous capture returned.)
+EmotionService: detectTextEmotion failed: ClientException: Failed to fetch, uri=http://127.0.0.1:5000/detect_text
+LlmService: HTTP 200
+LlmService: reply → I'm so sorry to hear that you're feeling sad, it can be really tough to navigate emotions during pregnancy. It takes a lot of courage to acknowledge and share your feelings, thank you for trusting me. Are you feeling anxious about the birth or your baby's health, is that contributing to your sadness at all?
+CameraService: Failed to delete temp file: Unsupported operation: _Namespace
+CameraService: Snapshot captured (22482 bytes, 29976 chars base64)
+EmotionService: detectImageEmotion failed: ClientException: Failed to fetch, uri=http://127.0.0.1:5000/detect
+LlmService: HTTP 200
+LlmService: reply → It can be really overwhelming to feel sad, and it's okay to not have all the answers right now. I'm here to listen and support you, and I want you to know that your feelings are valid. How is your body image changing with your pregnancy, are you feeling comfortable and confident in your own skin?
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I want you to know that I'm here to listen and support you in any way I can. It's wonderful that you're taking this time for yourself, and I'm honored to be a part of your journey. How are you feeling today, is everything feeling okay for you right now?
+CameraService: Front camera initialized successfully
+CameraService: Disposed
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.
+LlmService: HTTP 200
+LlmService: reply → I'm so glad you're here, and I'm honored to be a part of your journey. I want you to know that you're safe and supported in our conversation. How are you feeling today, emotionally, as you navigate this beautiful and life-changing experience of pregnancy?
+CameraService: Front camera initialized successfully
+Error while trying to load an asset: Flutter Web engine failed to fetch "assets/assets/images/logo.png". HTTP request succeeded, but the server responded with HTTP status 404.

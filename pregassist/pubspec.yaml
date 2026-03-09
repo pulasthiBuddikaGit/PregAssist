@@ -17,6 +17,10 @@ dependencies:
   fl_chart: ^0.68.0
   flutter_onnxruntime: ^1.6.1
   carousel_slider: ^5.0.0
+  flutter_tts: ^4.2.5
+  camera: any
+  permission_handler: any
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +33,5 @@ flutter:
     - assets/
     - assets/models/fetal_model_manual_12c_nozipmap.onnx
     - assets/manual_12c_features.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2.json
+    - assets/explainability/shadow_tree_manual12_depth6_balanced_v2_meta.json

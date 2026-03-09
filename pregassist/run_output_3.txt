@@ -1,0 +1,359 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/screens/Malikshi/emotion_graph_screen.dart:294:5: Error: Expected a class member, but got 'return'.
+    return SingleChildScrollView(
+    ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:295:14: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+      physics: const BouncingScrollPhysics(),
+             ^
+lib/screens/Malikshi/emotion_graph_screen.dart:296:14: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+             ^
+lib/screens/Malikshi/emotion_graph_screen.dart:297:12: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+      child: Column(
+           ^
+lib/screens/Malikshi/emotion_graph_screen.dart:1063:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/screens/Malikshi/emotion_graph_screen.dart:27:7: Error: The non-abstract class '_EmotionGraphScreenState' is missing implementations for these members:
+ - _EmotionGraphScreenState.SingleChildScrollView
+Try to either
+ - provide an implementation,
+ - inherit an implementation from a superclass or mixin,
+ - mark the class as abstract, or
+ - provide a 'noSuchMethod' implementation.
+class _EmotionGraphScreenState extends State<EmotionGraphScreen>
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:294:12: Context: '_EmotionGraphScreenState.SingleChildScrollView' is defined here.
+    return SingleChildScrollView(
+           ^^^^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:299:11: Error: Method invocation is not a constant expression.
+          _buildDominantEmotionCard(),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:301:11: Error: Method invocation is not a constant expression.
+          _buildSummaryPanel(),
+          ^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:303:11: Error: Method invocation is not a constant expression.
+          _buildFrequencyBars(),
+          ^^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:305:11: Error: Method invocation is not a constant expression.
+          _buildChartCard(),
+          ^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:307:11: Error: Method invocation is not a constant expression.
+          _buildLegend(),
+          ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:309:11: Error: Method invocation is not a constant expression.
+          _buildDisclaimer(),
+          ^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:311:11: Error: Method invocation is not a constant expression.
+          _buildActionButtons(),
+          ^^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:298:19: Error: Constant expression expected.
+Try inserting 'const'.
+        children: [
+                  ^
+lib/screens/Malikshi/emotion_graph_screen.dart:297:14: Error: Constant expression expected.
+Try inserting 'const'.
+      child: Column(
+             ^^^^^^
+lib/main.dart:158:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:169:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:176:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:187:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:195:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:211:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:219:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 0,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:229:30: Error: Not a constant expression.
+                      child: EmergencyDashboard(),
+                             ^^^^^^^^^^^^^^^^^^
+lib/main.dart:228:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 1,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/main.dart:234:30: Error: Not a constant expression.
+                      child: ProfileScreen(),
+                             ^^^^^^^^^^^^^
+lib/main.dart:233:23: Error: No named parameter with the name 'selectedIndex'.
+                      selectedIndex: 2,
+                      ^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const MainWrapper({super.key, required this.data});
+        ^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:173:23: Error: The method '_buildContent' isn't defined for the type '_EmotionGraphScreenState'.
+ - '_EmotionGraphScreenState' is from 'package:pregassist/screens/Malikshi/emotion_graph_screen.dart' ('lib/screens/Malikshi/emotion_graph_screen.dart').
+Try correcting the name to the name of an existing method, or defining a method named '_buildContent'.
+                    : _buildContent(),
+                      ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:320:21: Error: Undefined name '_dominantEmotion'.
+    final emotion = _dominantEmotion;
+                    ^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:321:19: Error: Method not found: '_emotionColor'.
+    final color = _emotionColor(emotion);
+                  ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:322:19: Error: Undefined name '_emotionFrequency'.
+    final count = _emotionFrequency[emotion] ?? 0;
+                  ^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:323:21: Error: Undefined name '_totalInteractions'.
+    final percent = _totalInteractions > 0
+                    ^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:324:20: Error: Undefined name '_totalInteractions'.
+        ? (count / _totalInteractions * 100).toStringAsFixed(0)
+                   ^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:350:17: Error: Method not found: '_emotionEmoji'.
+                _emotionEmoji(emotion),
+                ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:378:35: Error: Undefined name '_totalInteractions'.
+                  '$count out of $_totalInteractions interactions ($percent%)',
+                                  ^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:395:18: Error: Undefined name '_emotionFrequency'.
+    final freq = _emotionFrequency;
+                 ^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:427:27: Error: Method not found: '_emotionColor'.
+            final color = _emotionColor(label);
+                          ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:424:15: Error: Undefined name '_emotionLabels'.
+          ...(_emotionLabels.map((label) {
+              ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:507:26: Error: Undefined name '_totalInteractions'.
+                value: '$_totalInteractions',
+                         ^^^^^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:514:26: Error: Undefined name '_negativeCount'.
+                value: '$_negativeCount',
+                         ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:571:18: Error: Undefined name '_riskColor'.
+          color: _riskColor.withValues(alpha: 0.08),
+                 ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:574:20: Error: Undefined name '_riskColor'.
+            color: _riskColor.withValues(alpha: 0.3),
+                   ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:580:18: Error: Undefined name '_riskIcon'.
+            Icon(_riskIcon, size: 22, color: _riskColor),
+                 ^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:580:46: Error: Undefined name '_riskColor'.
+            Icon(_riskIcon, size: 22, color: _riskColor),
+                                             ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:583:15: Error: Undefined name '_riskLevel'.
+              _riskLevel,
+              ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:587:24: Error: Undefined name '_riskColor'.
+                color: _riskColor,
+                       ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:595:24: Error: Undefined name '_riskColor'.
+                color: _riskColor.withValues(alpha: 0.7),
+                       ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:644:24: Error: Undefined name '_textRecords'.
+                maxX: (_textRecords.length - 1).toDouble().clamp(
+                       ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:673:37: Error: Undefined name '_textRecords'.
+                            value < _textRecords.length) {
+                                    ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:696:47: Error: Undefined name '_emotionLabels'.
+                        if (idx >= 0 && idx < _emotionLabels.length) {
+                                              ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:700:31: Error: Undefined name '_emotionLabels'.
+                              _emotionLabels[idx],
+                              ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:704:54: Error: Undefined name '_emotionLabels'.
+                                color: _emotionColor(_emotionLabels[idx]),
+                                                     ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:704:40: Error: Method not found: '_emotionColor'.
+                                color: _emotionColor(_emotionLabels[idx]),
+                                       ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:717:28: Error: Undefined name '_textRecords'.
+                    spots: _textRecords
+                           ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:743:41: Error: Undefined name '_textRecords'.
+                        final emotion = _textRecords[index].emotionLabel;
+                                        ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:746:34: Error: Method not found: '_emotionColor'.
+                          color: _emotionColor(emotion),
+                                 ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:758:40: Error: Undefined name '_textRecords'.
+                        final record = _textRecords[spot.spotIndex];
+                                       ^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:762:36: Error: Method not found: '_emotionColor'.
+                            color: _emotionColor(record.emotionLabel),
+                                   ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:794:24: Error: Method not found: '_emotionColor'.
+                color: _emotionColor(label),
+                       ^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:786:17: Error: Undefined name '_emotionLabels'.
+      children: _emotionLabels.map((label) {
+                ^^^^^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:847:13: Error: Undefined name '_riskLevel'.
+        if (_riskLevel == 'High' && widget.onAlertTrustedPerson != null) ...[
+            ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:847:37: Error: Undefined name 'widget'.
+        if (_riskLevel == 'High' && widget.onAlertTrustedPerson != null) ...[
+                                    ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:851:13: Error: Undefined name '_riskLevel'.
+        if (_riskLevel == 'Medium' && widget.onViewExercises != null) ...[
+            ^^^^^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:851:39: Error: Undefined name 'widget'.
+        if (_riskLevel == 'Medium' && widget.onViewExercises != null) ...[
+                                      ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:873:26: Error: Undefined name 'widget'.
+              onPressed: widget.onStartNew,
+                         ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:954:28: Error: Undefined name 'widget'.
+                onPressed: widget.onAlertTrustedPerson,
+                           ^^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:1038:28: Error: Undefined name 'widget'.
+                onPressed: widget.onViewExercises,
+                           ^^^^^^
+lib/screens/Malikshi/summary_screen.dart:253:20: Error: Expected ']' before this.
+              child: SingleChildScrollView(
+                   ^
+lib/screens/Malikshi/summary_screen.dart:253:15: Error: The getter 'child' isn't defined for the type 'SummaryScreen'.
+ - 'SummaryScreen' is from 'package:pregassist/screens/Malikshi/summary_screen.dart' ('lib/screens/Malikshi/summary_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'child'.
+              child: SingleChildScrollView(
+              ^^^^^
+lib/screens/Malikshi/emotion_graph_screen.dart:298:19: Error: Non-constant list literal is not a constant expression.
+        children: [
+                  ^
+Unhandled exception:
+Unsupported operation: Unsupported invalid type InvalidType(<invalid>) (InvalidType). Encountered while compiling file:///D:/Malikshi/PregAssist/pregassist/lib/main.dart, which contains the type: FunctionType(<invalid> Function(BuildContext, AsyncSnapshot<AuthSession>)).
+#0      LibraryCompiler._typeCompilationError (package:dev_compiler/src/kernel/compiler_new.dart:4480)
+#1      LibraryCompiler._emitType (package:dev_compiler/src/kernel/compiler_new.dart:4445)
+#2      LibraryCompiler._emitFunctionTagged (package:dev_compiler/src/kernel/compiler_new.dart:4292)
+#3      LibraryCompiler.visitFunctionExpression (package:dev_compiler/src/kernel/compiler_new.dart:8894)
+#4      FunctionExpression.accept (package:kernel/src/ast/expressions.dart:4695)
+#5      LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#6      LibraryCompiler._emitNamedExpression (package:dev_compiler/src/kernel/compiler_new.dart:8063)
+#7      LibraryCompiler._emitArgumentGroups (package:dev_compiler/src/kernel/compiler_new.dart:8053)
+#8      LibraryCompiler._emitArgumentList (package:dev_compiler/src/kernel/compiler_new.dart:8007)
+#9      LibraryCompiler.visitConstructorInvocation (package:dev_compiler/src/kernel/compiler_new.dart:8309)
+#10     ConstructorInvocation.accept (package:kernel/src/ast/expressions.dart:2695)
+#11     LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#12     LibraryCompiler.visitReturnStatement (package:dev_compiler/src/kernel/compiler_new.dart:5902)
+#13     ReturnStatement.accept (package:kernel/src/ast/statements.dart:1097)
+#14     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#15     MappedIterable.elementAt (dart:_internal/iterable.dart:402)
+#16     ListIterator.moveNext (dart:_internal/iterable.dart:371)
+#17     new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:194)
+#18     new _GrowableList.of (dart:core-patch/growable_array.dart:154)
+#19     new List.of (dart:core-patch/array_patch.dart:39)
+#20     SetBase.toList (dart:collection/set.dart:119)
+#21     LibraryCompiler.visitBlock (package:dev_compiler/src/kernel/compiler_new.dart:5257)
+#22     Block.accept (package:kernel/src/ast/statements.dart:106)
+#23     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#24     LibraryCompiler._emitFunctionScopedBody (package:dev_compiler/src/kernel/compiler_new.dart:5081)
+#25     LibraryCompiler._emitFunction.<anonymous closure> (package:dev_compiler/src/kernel/compiler_new.dart:4667)
+#26     LibraryCompiler._withLetScope (package:dev_compiler/src/kernel/compiler_new.dart:3661)
+#27     LibraryCompiler._withCurrentFunction (package:dev_compiler/src/kernel/compiler_new.dart:4841)
+#28     LibraryCompiler._emitFunction (package:dev_compiler/src/kernel/compiler_new.dart:4659)
+#29     LibraryCompiler._emitArrowFunction (package:dev_compiler/src/kernel/compiler_new.dart:8901)
+#30     LibraryCompiler.visitFunctionExpression (package:dev_compiler/src/kernel/compiler_new.dart:8891)
+#31     FunctionExpression.accept (package:kernel/src/ast/expressions.dart:4695)
+#32     LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#33     LibraryCompiler._emitNamedExpression (package:dev_compiler/src/kernel/compiler_new.dart:8063)
+#34     LibraryCompiler._emitArgumentGroups (package:dev_compiler/src/kernel/compiler_new.dart:8053)
+#35     LibraryCompiler._emitArgumentList (package:dev_compiler/src/kernel/compiler_new.dart:8007)
+#36     LibraryCompiler.visitConstructorInvocation (package:dev_compiler/src/kernel/compiler_new.dart:8309)
+#37     ConstructorInvocation.accept (package:kernel/src/ast/expressions.dart:2695)
+#38     LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#39     LibraryCompiler.visitReturnStatement (package:dev_compiler/src/kernel/compiler_new.dart:5902)
+#40     ReturnStatement.accept (package:kernel/src/ast/statements.dart:1097)
+#41     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#42     MappedIterable.elementAt (dart:_internal/iterable.dart:402)
+#43     ListIterator.moveNext (dart:_internal/iterable.dart:371)
+#44     new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:194)
+#45     new _GrowableList.of (dart:core-patch/growable_array.dart:154)
+#46     new List.of (dart:core-patch/array_patch.dart:39)
+#47     SetBase.toList (dart:collection/set.dart:119)
+#48     LibraryCompiler.visitBlock (package:dev_compiler/src/kernel/compiler_new.dart:5257)
+#49     Block.accept (package:kernel/src/ast/statements.dart:106)
+#50     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#51     LibraryCompiler._emitFunctionScopedBody (package:dev_compiler/src/kernel/compiler_new.dart:5081)
+#52     LibraryCompiler._emitFunction.<anonymous closure> (package:dev_compiler/src/kernel/compiler_new.dart:4667)
+#53     LibraryCompiler._withLetScope (package:dev_compiler/src/kernel/compiler_new.dart:3661)
+#54     LibraryCompiler._withCurrentFunction (package:dev_compiler/src/kernel/compiler_new.dart:4841)
+#55     LibraryCompiler._emitFunction (package:dev_compiler/src/kernel/compiler_new.dart:4659)
+#56     LibraryCompiler._emitArrowFunction (package:dev_compiler/src/kernel/compiler_new.dart:8901)
+#57     LibraryCompiler.visitFunctionExpression (package:dev_compiler/src/kernel/compiler_new.dart:8891)
+#58     FunctionExpression.accept (package:kernel/src/ast/expressions.dart:4695)
+#59     LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#60     LibraryCompiler._emitNamedExpression (package:dev_compiler/src/kernel/compiler_new.dart:8063)
+#61     LibraryCompiler._emitArgumentGroups (package:dev_compiler/src/kernel/compiler_new.dart:8053)
+#62     LibraryCompiler._emitArgumentList (package:dev_compiler/src/kernel/compiler_new.dart:8007)
+#63     LibraryCompiler.visitConstructorInvocation (package:dev_compiler/src/kernel/compiler_new.dart:8309)
+#64     ConstructorInvocation.accept (package:kernel/src/ast/expressions.dart:2695)
+#65     LibraryCompiler._visitExpression (package:dev_compiler/src/kernel/compiler_new.dart:5147)
+#66     LibraryCompiler.visitReturnStatement (package:dev_compiler/src/kernel/compiler_new.dart:5902)
+#67     ReturnStatement.accept (package:kernel/src/ast/statements.dart:1097)
+#68     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#69     MappedIterable.elementAt (dart:_internal/iterable.dart:402)
+#70     ListIterator.moveNext (dart:_internal/iterable.dart:371)
+#71     new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:194)
+#72     new _GrowableList.of (dart:core-patch/growable_array.dart:154)
+#73     new List.of (dart:core-patch/array_patch.dart:39)
+#74     SetBase.toList (dart:collection/set.dart:119)
+#75     LibraryCompiler.visitBlock (package:dev_compiler/src/kernel/compiler_new.dart:5257)
+#76     Block.accept (package:kernel/src/ast/statements.dart:106)
+#77     LibraryCompiler._visitStatement (package:dev_compiler/src/kernel/compiler_new.dart:5044)
+#78     LibraryCompiler._emitFunctionScopedBody (package:dev_compiler/src/kernel/compiler_new.dart:5081)
+#79     LibraryCompiler._emitFunction.<anonymous closure> (package:dev_compiler/src/kernel/compiler_new.dart:4667)
+#80     LibraryCompiler._withLetScope (package:dev_compiler/src/kernel/compiler_new.dart:3661)
+#81     LibraryCompiler._withCurrentFunction (package:dev_compiler/src/kernel/compiler_new.dart:4841)
+#82     LibraryCompiler._emitFunction (package:dev_compiler/src/kernel/compiler_new.dart:4659)
+#83     LibraryCompiler._emitMethodDeclaration.<anonymous closure> (package:dev_compiler/src/kernel/compiler_new.dart:2941)
+#84     LibraryCompiler._withMethodDeclarationContext (package:dev_compiler/src/kernel/compiler_new.dart:4866)
+#85     LibraryCompiler._emitMethodDeclaration (package:dev_compiler/src/kernel/compiler_new.dart:2939)
+#86     LibraryCompiler._emitClassProperties (package:dev_compiler/src/kernel/compiler_new.dart:2880)
+#87     LibraryCompiler._emitClassDeclaration (package:dev_compiler/src/kernel/compiler_new.dart:1488)
+#88     LibraryCompiler._emitClass (package:dev_compiler/src/kernel/compiler_new.dart:1426)
+#89     List.forEach (dart:core-patch/growable_array.dart:428)
+#90     LibraryCompiler._emitLibrary (package:dev_compiler/src/kernel/compiler_new.dart:1348)
+#91     LibraryCompiler.emitLibrary (package:dev_compiler/src/kernel/compiler_new.dart:962)
+#92     LibraryBundleCompiler.emitModule (package:dev_compiler/src/kernel/compiler_new.dart:165)
+#93     IncrementalJavaScriptBundler.compile (package:frontend_server/src/javascript_bundle.dart:324)
+#94     FrontendCompiler.writeJavaScriptBundle (package:frontend_server/frontend_server.dart:922)
+<asynchronous suspension>
+#95     FrontendCompiler.compile (package:frontend_server/frontend_server.dart:728)
+<asynchronous suspension>
+#96     listenAndCompile.<anonymous closure> (package:frontend_server/frontend_server.dart:1449)
+<asynchronous suspension>
+The Dart compiler exited unexpectedly.
+Waiting for connection from debug service on Chrome...             16.9s
+Failed to compile application.
