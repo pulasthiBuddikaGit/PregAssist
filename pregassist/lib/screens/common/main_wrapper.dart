@@ -66,14 +66,14 @@ class _MainWrapperState extends State<MainWrapper> {
             unselectedItemColor: Colors.grey,
             items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                activeIcon: GradientIcon(Icons.home),
-                label: 'Home',
+                icon: Icon(Icons.mood),
+                activeIcon: GradientIcon(Icons.mood),
+                label: 'Mood',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard),
-                activeIcon: GradientIcon(Icons.dashboard),
-                label: 'Dashboard',
+                icon: Icon(Icons.monitor_heart),
+                activeIcon: GradientIcon(Icons.monitor_heart),
+                label: 'Vitals',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.medical_information),
