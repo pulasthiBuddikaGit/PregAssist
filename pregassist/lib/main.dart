@@ -6,6 +6,7 @@ import 'screens/common/main_wrapper.dart';
 
 // You already have these:
 import 'screens/pulasthi/ctg_segment_screen.dart';
+import 'screens/pulasthi/doctor_notifications_navigation_screen.dart';
 import 'models/pulasthi/assessment_data.dart';
 
 // New public flow screens (create these files below)
@@ -147,6 +148,8 @@ class _MyAppState extends State<MyApp> {
                     return const DoctorPanelScreen();
                   case '/app/doctor/ctg':
                     return CTGSegmentScreen(data: _assessmentData);
+                  case '/app/doctor/notifications':
+                    return const DoctorNotificationsNavigationScreen();
                   default:
                     return const _NotFound();
                 }
