@@ -1,0 +1,33 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/screens/common/main_wrapper.dart:94:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/screens/common/main_wrapper.dart:25:39: Error: The method '_MainWrapperState' isn't defined for the type 'MainWrapper'.
+ - 'MainWrapper' is from 'package:pregassist/screens/common/main_wrapper.dart' ('lib/screens/common/main_wrapper.dart').
+Try correcting the name to the name of an existing method, or defining a method named '_MainWrapperState'.
+  State<MainWrapper> createState() => _MainWrapperState();
+                                      ^^^^^^^^^^^^^^^^^
+lib/screens/common/main_wrapper.dart:29:18: Error: Undefined name 'widget'.
+    if (index == widget.selectedIndex) return;
+                 ^^^^^^
+lib/screens/common/main_wrapper.dart:33:40: Error: Undefined name 'context'.
+        Navigator.pushReplacementNamed(context, '/app/mother/chat');
+                                       ^^^^^^^
+lib/screens/common/main_wrapper.dart:36:40: Error: Undefined name 'context'.
+        Navigator.pushReplacementNamed(context, '/app/mother/dashboard');
+                                       ^^^^^^^
+lib/screens/common/main_wrapper.dart:39:40: Error: Undefined name 'context'.
+        Navigator.pushReplacementNamed(context, '/app/mother/emergency');
+                                       ^^^^^^^
+lib/screens/common/main_wrapper.dart:42:40: Error: Undefined name 'context'.
+        Navigator.pushReplacementNamed(context, '/app/mother/profile');
+                                       ^^^^^^^
+lib/screens/common/main_wrapper.dart:51:13: Error: Undefined name 'widget'.
+      body: widget.child ?? const Center(child: CircularProgressIndicator()),
+            ^^^^^^
+lib/screens/common/main_wrapper.dart:62:27: Error: Undefined name 'widget'.
+            currentIndex: widget.selectedIndex,
+                          ^^^^^^
+Waiting for connection from debug service on Chrome...             28.6s
+Failed to compile application.

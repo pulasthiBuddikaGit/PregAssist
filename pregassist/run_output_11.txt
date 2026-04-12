@@ -1,0 +1,39 @@
+Unhandled exception:
+Error on line 17, column 21: Expected ':'.
+   ╷
+17 │   shared_preferences: any
+   │                     ^
+   ╵
+#0      Scanner._reportError (package:yaml/src/scanner.dart:1639:7)
+#1      Scanner._staleSimpleKeys (package:yaml/src/scanner.dart:485:9)
+#2      Scanner._fetchMoreTokens (package:yaml/src/scanner.dart:319:9)
+#3      Scanner.peek (package:yaml/src/scanner.dart:311:27)
+#4      Parser._parseBlockMappingKey (package:yaml/src/parser.dart:424:26)
+#5      Parser._stateMachine (package:yaml/src/parser.dart:100:16)
+#6      Parser.parse (package:yaml/src/parser.dart:61:19)
+#7      Loader._loadMapping (package:yaml/src/loader.dart:169:23)
+#8      Loader._loadNode (package:yaml/src/loader.dart:88:35)
+#9      Loader._loadMapping (package:yaml/src/loader.dart:163:19)
+#10     Loader._loadNode (package:yaml/src/loader.dart:88:35)
+#11     Loader._loadMapping (package:yaml/src/loader.dart:163:19)
+#12     Loader._loadNode (package:yaml/src/loader.dart:88:35)
+#13     Loader._loadDocument (package:yaml/src/loader.dart:68:20)
+#14     Loader.load (package:yaml/src/loader.dart:60:20)
+#15     loadYamlDocument (package:yaml/yaml.dart:69:25)
+#16     loadYamlNode (package:yaml/yaml.dart:54:5)
+#17     loadYaml (package:yaml/yaml.dart:41:5)
+#18     FlutterManifest.createFromString (package:flutter_tools/src/flutter_manifest.dart:55:28)
+#19     FlutterManifest.createFromPath (package:flutter_tools/src/flutter_manifest.dart:49:28)
+#20     runInContext.<anonymous closure> (package:flutter_tools/src/context_runner.dart:226:44)
+#21     AppContext._generateIfNecessary.<anonymous closure> (package:flutter_tools/src/base/context.dart:108:42)
+#22     _LinkedHashMapMixin.putIfAbsent (dart:_compact_hash:675:23)
+#23     AppContext._generateIfNecessary (package:flutter_tools/src/base/context.dart:95:20)
+#24     AppContext.get (package:flutter_tools/src/base/context.dart:125:32)
+#25     featureFlags (package:flutter_tools/src/features.dart:13:42)
+#26     run.<anonymous closure> (package:flutter_tools/runner.dart:55:40)
+#27     runInContext.runnerWrapper (package:flutter_tools/src/context_runner.dart:78:18)
+<asynchronous suspension>
+#28     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#29     main (package:flutter_tools/executable.dart:103:3)
+<asynchronous suspension>
