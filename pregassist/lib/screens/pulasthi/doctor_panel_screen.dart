@@ -4,6 +4,10 @@ import '../../main.dart'; // AuthLocal
 class DoctorPanelScreen extends StatelessWidget {
   const DoctorPanelScreen({super.key});
 
+  void _openNotifications(BuildContext context) {
+    Navigator.pushNamed(context, '/app/doctor/notifications');
+  }
+
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -87,6 +91,11 @@ class DoctorPanelScreen extends StatelessWidget {
           centerTitle: true,
           actions: [
             IconButton(
+              tooltip: "Notifications",
+              onPressed: () => _openNotifications(context),
+              icon: const Icon(Icons.notifications_none, color: Colors.white),
+            ),
+            IconButton(
               tooltip: "Logout",
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout, color: Colors.white),
@@ -152,6 +161,17 @@ class DoctorPanelScreen extends StatelessWidget {
                           colors: [Color(0xFFFF637E), Color(0xFFFF8904)],
                         ),
                         onTap: () => _notAvailable(context, "Medical Reports"),
+                      ),
+                      _FeatureTile(
+                        title: "Notifications",
+                        subtitle: "Patient physical health alerts",
+                        icon: Icons.notifications_active,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF00B894), Color(0xFF0984E3)],
+                        ),
+                        onTap: () => _openNotifications(context),
                       ),
                       _FeatureTile(
                         title: "Logout",
