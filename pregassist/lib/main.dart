@@ -177,7 +177,7 @@ class _MyAppState extends State<MyApp> {
                   case '/app/mother/dashboard':
                     return MainWrapper(
                       selectedIndex: 1,
-                      child: const DashboardScreen(),
+                      child: const DashboardScreen(motherId: "test@email.com"),
                     );
                   case '/app/mother/graph':
                     return MainWrapper(

@@ -37,6 +37,7 @@ class VitalsSave(BaseModel):
     confidence: float | None = None
 
 class PredictRequest(BaseModel):
+    motherId: str
     trimester: int = 1
     vitals: list[float]
 
