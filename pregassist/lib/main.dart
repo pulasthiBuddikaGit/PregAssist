@@ -176,10 +176,6 @@ class _MyAppState extends State<MyApp> {
                       ),
                     );
                   case '/app/mother/dashboard':
-                    // NOTE: You need to retrieve the actual motherId from your login state or arguments here.
-                    // For now, I'll use a placeholder like '123' so the error goes away.
-                    String currentMotherId = '123'; 
-
                     return MainWrapper(
                       selectedIndex: 1,
                       child: const DashboardScreen(motherId: "test@email.com"),
