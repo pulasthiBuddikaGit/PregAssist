@@ -27,7 +27,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = false;
 
   final Map<String, TextEditingController> controllers = {
-    "Month": TextEditingController(), // 🔥 NEW
+    "Pregnancy Week": TextEditingController(), // 🔥 NEW
     "Age": TextEditingController(),
     "SystolicBP": TextEditingController(),
     "DiastolicBP": TextEditingController(),
@@ -44,10 +44,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  // 🔥 MONTH → TRIMESTER
-  int convertMonthToTrimester(int month) {
-    if (month <= 3) return 1;
-    else if (month <= 6) return 2;
+  // 🔥 WEEK → TRIMESTER
+  int convertWeekToTrimester(int week) {
+    if (week <= 13) return 1;
+    else if (week <= 27) return 2;
     else return 3;
   }
 
@@ -61,7 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     double? parse(String key) => double.tryParse(controllers[key]!.text);
 
-    final month = int.tryParse(controllers["Month"]!.text);
+    final week = int.tryParse(controllers["Pregnancy Week"]!.text);
     final age = parse("Age");
     final sbp = parse("SystolicBP");
     final dbp = parse("DiastolicBP");
@@ -69,12 +69,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final temp= parse("BodyTemp");
     final hr  = parse("HeartRate");
 
-    if ([month, age, sbp, dbp, bs, temp, hr].contains(null)) {
+    if ([week, age, sbp, dbp, bs, temp, hr].contains(null)) {
       _showError("Please fill all fields correctly");
       return;
     }
 
-    int trimester = convertMonthToTrimester(month!);
+    int trimester = convertWeekToTrimester(week!);
 
     setState(() => isLoading = true);
 
@@ -82,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       await saveUserData({
         "motherId": widget.motherId,
-        "Month": month,
+        "Week": week,
         "Age": age,
         "SystolicBP": sbp,
         "DiastolicBP": dbp,
@@ -93,6 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final prediction = await MaternalService.predict(
         motherId: widget.motherId,
+        week: week,
         trimester: trimester,
         vitals: [age!, sbp!, dbp!, bs!, temp!, hr!],
       );
@@ -130,21 +131,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           decoration: const BoxDecoration(
-            color: Color(0xFFEFF6FF),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
+            ),
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Row(
             children: [
-              const SizedBox(width: 40), // Balance the close button
+              const SizedBox(width: 5),
+              Image.asset('assets/logo.png', height: 28, fit: BoxFit.contain),
+              const SizedBox(width: 10),
               const Expanded(
                 child: Text(
                   "Analysis Complete",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
+                icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -223,15 +229,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      "Trend: ${result!.forecast['trend'] ?? 'N/A'}",
-                      style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      "Top Factor: ${result!.topFactor}",
+                    const Text(
+                      "Tap Forecast to view detailed trend analysis",
+                      style: TextStyle(color: Colors.grey),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -476,7 +477,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          _buildInput("Month"), 
+          _buildInput("Pregnancy Week"), 
           _buildInput("Age"),
           _buildInput("SystolicBP"),
           _buildInput("DiastolicBP"),

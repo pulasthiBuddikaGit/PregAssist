@@ -53,6 +53,7 @@ class MaternalService {
 
   static Future<MaternalRiskResult> predict({
     required String motherId,
+    required int week,
     required int trimester,
     required List<double> vitals,
   }) async {
@@ -61,6 +62,7 @@ class MaternalService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'motherId': motherId,
+        'week': week,
         'trimester': trimester,
         'vitals': vitals,
       }),

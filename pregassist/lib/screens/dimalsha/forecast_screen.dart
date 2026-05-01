@@ -5,54 +5,195 @@ class ForecastScreen extends StatelessWidget {
 
   const ForecastScreen({super.key, required this.forecast});
 
+  Color getTrendColor(String trend) {
+    if (trend == "increasing") return Colors.red;
+    if (trend == "slightly_increasing") return Colors.orange;
+    return Colors.green;
+  }
+
   @override
   Widget build(BuildContext context) {
-
     final details = forecast['details'] ?? {};
+    final trend = forecast['trend'] ?? "stable";
+    final message = forecast['message'] ?? "";
+    final severity = forecast['severity'] ?? "low";
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Forecast Analysis")),
-      body: Padding(
+      backgroundColor: const Color(0xFFF4F0FF),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+          ),
+        ),
+        title: const Text(
+          "Forecast Analysis",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leadingWidth: 90,
+        leading: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40),
+            ),
+            Expanded(
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
+          ],
+        ),
+      ),
+
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
 
-            // 🔥 OVERALL TREND
-            Card(
-              child: ListTile(
-                title: Text("Overall Trend"),
-                subtitle: Text(forecast['trend']),
+            // 🔥 GLASS STYLE TREND CARD
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    getTrendColor(trend).withOpacity(0.25),
+                    Colors.white.withOpacity(0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // 🔥 MESSAGE
-            Text(forecast['message'] ?? ""),
-
-            const SizedBox(height: 20),
-
-            // 🔥 PARAMETER DETAILS
-            Card(
               child: Column(
                 children: [
-                  ListTile(
-                    title: Text("Blood Pressure"),
-                    trailing: Text(details['blood_pressure'] ?? "-"),
+
+                  const Text(
+                    "Overall Trend",
+                    style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
-                  ListTile(
-                    title: Text("Blood Sugar"),
-                    trailing: Text(details['blood_sugar'] ?? "-"),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    trend.replaceAll("_", " ").toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: getTrendColor(trend),
+                    ),
                   ),
-                  ListTile(
-                    title: Text("Heart Rate"),
-                    trailing: Text(details['heart_rate'] ?? "-"),
+
+                  const SizedBox(height: 10),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: getTrendColor(trend),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      severity.toUpperCase(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // 🔥 MESSAGE BOX (IMPROVED)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.shade50,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.insights, color: Colors.deepPurple),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 🔥 PARAMETER CARDS
+            buildTile("Blood Pressure", details['blood_pressure'], Icons.favorite),
+            buildTile("Blood Sugar", details['blood_sugar'], Icons.water_drop),
+            buildTile("Heart Rate", details['heart_rate'], Icons.monitor_heart),
+
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildTile(String title, String? value, IconData icon) {
+    Color color;
+
+    if (value == "increasing") {
+      color = Colors.red;
+    } else if (value == "stable") {
+      color = Colors.green;
+    } else {
+      color = Colors.grey;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.2),
+            child: Icon(icon, color: color),
+          ),
+
+          const SizedBox(width: 15),
+
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 15),
+            ),
+          ),
+
+          Text(
+            (value ?? "-").toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
