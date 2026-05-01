@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-// 1. ADD THESE IMPORTS
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class DiagnosisResultScreen extends StatelessWidget {
+class DiagnosisResultScreen extends StatefulWidget {
   final String diagnosis;
   final String reasoning;
 
@@ -13,33 +14,74 @@ class DiagnosisResultScreen extends StatelessWidget {
     required this.reasoning,
   });
 
-  // --- 2. THE HELPER FUNCTION (Exact code that worked before) ---
-  Future<void> _launchAR(String drillId) async {
-  print("🚀 Launching AR for: $drillId");
-  
-  final intent = AndroidIntent(
-    action: 'android.intent.action.MAIN',
-    package: 'com.pregassist.ar', 
-    componentName: 'com.unity3d.player.UnityPlayerGameActivity', 
-    
-    category: 'android.intent.category.LAUNCHER',
-    flags: <int>[
-      Flag.FLAG_ACTIVITY_NEW_TASK,
-      Flag.FLAG_ACTIVITY_CLEAR_TASK
-    ],
-    arguments: <String, dynamic>{
-      'drill_id': drillId,
-    },
-  );
-
-  await intent.launch();
+  @override
+  State<DiagnosisResultScreen> createState() => _DiagnosisResultScreenState();
 }
+
+class _DiagnosisResultScreenState extends State<DiagnosisResultScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    _saveToHistory();
+  }
+
+  // --- NEW: Save current diagnosis to SharedPreferences ---
+  Future<void> _saveToHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? historyJson = prefs.getString('diagnosis_history');
+    List<Map<String, String>> historyList = [];
+
+    if (historyJson != null) {
+      final List<dynamic> decoded = jsonDecode(historyJson);
+      historyList = decoded.map((e) => Map<String, String>.from(e)).toList();
+    }
+
+    // Format current date (e.g., "2026-05-01")
+    final now = DateTime.now();
+    final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    // Add new entry to the top of the list
+    historyList.insert(0, {
+      'title': "Diagnosis: ${widget.diagnosis}",
+      'date': dateStr,
+    });
+
+    // Optional: Keep only the latest 10 entries so it doesn't get infinitely long
+    if (historyList.length > 10) {
+      historyList = historyList.sublist(0, 10);
+    }
+
+    await prefs.setString('diagnosis_history', jsonEncode(historyList));
+  }
+
+  // --- THE HELPER FUNCTION ---
+  Future<void> _launchAR(String drillId) async {
+    print("🚀 Launching AR for: $drillId");
+    
+    final intent = AndroidIntent(
+      action: 'android.intent.action.MAIN',
+      package: 'com.pregassist.ar', 
+      componentName: 'com.unity3d.player.UnityPlayerGameActivity', 
+      
+      category: 'android.intent.category.LAUNCHER',
+      flags: <int>[
+        Flag.FLAG_ACTIVITY_NEW_TASK,
+        Flag.FLAG_ACTIVITY_CLEAR_TASK
+      ],
+      arguments: <String, dynamic>{
+        'drill_id': drillId,
+      },
+    );
+
+    await intent.launch();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // 1. Determine status color and icon
+    // 1. Determine status color and icon using widget.diagnosis
     IconData statusIcon;
-    bool isNormal = diagnosis.contains("Normal") || diagnosis.contains("Low Risk");
+    bool isNormal = widget.diagnosis.contains("Normal") || widget.diagnosis.contains("Low Risk");
     if (isNormal) {
       statusIcon = Icons.check_circle;
     } else {
@@ -51,36 +93,27 @@ class DiagnosisResultScreen extends StatelessWidget {
     String actionImage;
     VoidCallback actionTap;
 
-    if (diagnosis.contains("Preterm Labor")) {
-      // RESULT 1: Preterm Labor
+    if (widget.diagnosis.contains("Preterm Labor")) {
       actionText = "AR Training: Preterm Labor";
       actionImage = "assets/preterm_labour.png"; 
-      // Call the AR Launcher
       actionTap = () => _launchAR("preterm"); 
 
-    } else if (diagnosis.contains("Preeclampsia")) {
-      // RESULT 2: Preeclampsia
+    } else if (widget.diagnosis.contains("Preeclampsia")) {
       actionText = "AR Training: Preeclampsia";
       actionImage = "assets/preeclampsia.png"; 
-      // Call the AR Launcher
       actionTap = () => _launchAR("preeclampsia");
 
-    } else if (diagnosis.contains("Sepsis")) {
-      // RESULT 3: Sepsis
+    } else if (widget.diagnosis.contains("Sepsis")) {
       actionText = "AR Training: Sepsis";
       actionImage = "assets/sepsis.png"; 
-      // Call the AR Launcher
       actionTap = () => _launchAR("sepsis");
 
-    } else if (diagnosis.contains("Hemorrhage")) {
-      // RESULT 4: Hemorrhage
+    } else if (widget.diagnosis.contains("Hemorrhage")) {
       actionText = "AR Training: Hemorrhage";
       actionImage = "assets/hemorrhage.png"; 
-      // Call the AR Launcher
       actionTap = () => _launchAR("hemorrhage");
 
     } else {
-      // Fallback (Normal / Low Risk) -> No AR needed here
       actionText = "View Wellness Plan";
       actionImage = "assets/food.jpg"; 
       actionTap = () { print("Navigate to Diet/Wellness Page"); };
@@ -158,7 +191,7 @@ class DiagnosisResultScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        diagnosis,
+                        widget.diagnosis,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 20,
@@ -187,7 +220,7 @@ class DiagnosisResultScreen extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          reasoning,
+                          widget.reasoning,
                           style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.white),
                         ),
                       ),
