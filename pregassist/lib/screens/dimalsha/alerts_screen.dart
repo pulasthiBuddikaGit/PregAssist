@@ -19,7 +19,39 @@ class AlertsScreen extends StatelessWidget {
     final isHighRisk = riskLevel.toLowerCase() == "high risk";
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Emergency Alerts")),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+          ),
+        ),
+        title: const Text(
+          "Emergency Alerts",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leadingWidth: 90,
+        leading: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40),
+            ),
+            Expanded(
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
+          ],
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

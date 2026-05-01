@@ -43,21 +43,27 @@ class AiExplanationScreen extends StatelessWidget {
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
           ),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: const Text(
+          "Risk Analysis",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leadingWidth: 90,
+        leading: Row(
           children: [
-            Image.asset('assets/logo.png', height: 30, fit: BoxFit.contain),
-            const SizedBox(width: 15), // Increased spacing
-            Text("Risk Analysis", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40),
+            ),
+            Expanded(
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
           ],
         ),
-         backgroundColor: Colors.transparent,
-         elevation: 0,
-         centerTitle: true,
-         leading: IconButton(
-           icon: Icon(Icons.arrow_back, color: Colors.white),
-           onPressed: () => Navigator.pop(context),
-         ),
       ),
       body: Container(
         decoration: BoxDecoration(
