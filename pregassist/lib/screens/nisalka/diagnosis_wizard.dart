@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'diagnosis_result_screen.dart';
 
 // IMPORTANT: This import path matches your file structure
@@ -69,7 +71,8 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
     }
   }
 
-  void _finishDiagnosis() {
+  // --- UPDATED: Now an async function that reads SharedPreferences ---
+  Future<void> _finishDiagnosis() async {
     // Check if all questions are answered
     if (_selectedAnswers.contains(-1)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,42 +84,81 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
       return;
     }
 
-    // --- 1. HARDCODED VITALS ---
-    Map<String, dynamic> patientData = {
-      'BP_Systolic': 120,    
-      'BP_Diastolic': 80,    
-      'Heart_Rate': 75,      
-      'Blood_Glucose': 90,   
-      'GestationalWeek': 30, 
-    };
-
-    // --- 2. ADD USER ANSWERS TO DATA ---
-    patientData['Headache'] = _selectedAnswers[0];
-    patientData['VisualDisturbance'] = _selectedAnswers[1];
-    patientData['HeavyBleeding'] = _selectedAnswers[2];
-    patientData['AbdominalPain'] = _selectedAnswers[3];
-    patientData['FoulDischarge'] = _selectedAnswers[4];
-    patientData['LeakingFluid'] = _selectedAnswers[5];
-
-    // --- 3. CALL THE EXPERT SYSTEM ---
-    MaternalHealthExpertSystem expertSystem = MaternalHealthExpertSystem();
-    
-    // Get the result (List containing [Diagnosis, Reasoning])
-    List<String> results = expertSystem.evaluatePatient(patientData);
-
-    String diagnosis = results[0];
-    String reasoning = results[1];
-
-    // --- 4. NAVIGATE TO RESULTS ---
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DiagnosisResultScreen(
-          diagnosis: diagnosis,
-          reasoning: reasoning,
-        ),
-      ),
+    // Show a quick loading indicator while fetching from local storage
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      // --- 1. RETRIEVE VITALS FROM LOCAL STORAGE ---
+      final prefs = await SharedPreferences.getInstance();
+      final String? userDataString = prefs.getString('user_data');
+      
+      Map<String, dynamic> patientData = {};
+
+      if (userDataString != null) {
+        final Map<String, dynamic> savedData = jsonDecode(userDataString);
+        
+        // Map the Dashboard keys to the Expert System keys
+        // (as num?)?.toInt() ensures safe conversion even if stored as double
+        patientData = {
+          'BP_Systolic': (savedData['SystolicBP'] as num?)?.toInt() ?? 120,
+          'BP_Diastolic': (savedData['DiastolicBP'] as num?)?.toInt() ?? 80,
+          'Heart_Rate': (savedData['HeartRate'] as num?)?.toInt() ?? 75,
+          'Blood_Glucose': (savedData['BS'] as num?)?.toInt() ?? 90,
+          'GestationalWeek': (savedData['Week'] as num?)?.toInt() ?? 20, 
+        };
+      } else {
+        // Fallback just in case no data was saved yet
+        patientData = {
+          'BP_Systolic': 120,    
+          'BP_Diastolic': 80,    
+          'Heart_Rate': 75,      
+          'Blood_Glucose': 90,   
+          'GestationalWeek': 20, 
+        };
+      }
+
+      // --- 2. ADD USER ANSWERS TO DATA ---
+      patientData['Headache'] = _selectedAnswers[0];
+      patientData['VisualDisturbance'] = _selectedAnswers[1];
+      patientData['HeavyBleeding'] = _selectedAnswers[2];
+      patientData['AbdominalPain'] = _selectedAnswers[3];
+      patientData['FoulDischarge'] = _selectedAnswers[4];
+      patientData['LeakingFluid'] = _selectedAnswers[5];
+
+      // --- 3. CALL THE EXPERT SYSTEM ---
+      MaternalHealthExpertSystem expertSystem = MaternalHealthExpertSystem();
+      
+      // Get the result (List containing [Diagnosis, Reasoning])
+      List<String> results = expertSystem.evaluatePatient(patientData);
+
+      String diagnosis = results[0];
+      String reasoning = results[1];
+
+      // Close the loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // --- 4. NAVIGATE TO RESULTS ---
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DiagnosisResultScreen(
+              diagnosis: diagnosis,
+              reasoning: reasoning,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // Close dialog on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error running diagnosis: $e")),
+      );
+    }
   }
 
   @override
@@ -247,7 +289,7 @@ class _DiagnosisWizardState extends State<DiagnosisWizard> {
           
           const SizedBox(height: 30),
 
-          // Options Buttons (Remains Exactly the Same)
+          // Options Buttons
           ...List.generate(3, (optionIndex) {
             bool isSelected = _selectedAnswers[index] == optionIndex;
             
