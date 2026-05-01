@@ -182,8 +182,7 @@ class _MyAppState extends State<MyApp> {
 
                     return MainWrapper(
                       selectedIndex: 1,
-                      // REMOVE 'const' here, and add the motherId
-                      child: DashboardScreen(motherId: currentMotherId), 
+                      child: const DashboardScreen(motherId: "test@email.com"),
                     );
                   case '/app/mother/graph':
                     return MainWrapper(
