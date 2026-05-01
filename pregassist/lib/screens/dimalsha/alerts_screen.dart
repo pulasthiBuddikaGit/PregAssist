@@ -1,28 +1,121 @@
 import 'package:flutter/material.dart';
 
 class AlertsScreen extends StatelessWidget {
-  final int riskLevel;
-  const AlertsScreen({super.key, required this.riskLevel});
+  final String riskLevel;
+  final List<Map<String, dynamic>> warnings;
+  final bool doctorAlert;
+  final String recommendation;
+
+  const AlertsScreen({
+    super.key,
+    required this.riskLevel,
+    required this.warnings,
+    required this.doctorAlert,
+    required this.recommendation,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isHighRisk = riskLevel.toLowerCase() == "high risk";
+
     return Scaffold(
       appBar: AppBar(title: const Text("Emergency Alerts")),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(30),
-          color: riskLevel == 2 ? Colors.red[50] : Colors.green[50],
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.notifications_active, size: 60, color: riskLevel == 2 ? Colors.red : Colors.green),
-              Text(riskLevel == 2 ? "Doctor Notified" : "Status: Normal", style: const TextStyle(fontSize: 20)),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // 🔴 Alert Banner
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isHighRisk ? Colors.red[50] : Colors.green[50],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    doctorAlert
+                        ? Icons.warning_rounded
+                        : Icons.check_circle,
+                    size: 60,
+                    color: doctorAlert ? Colors.red : Colors.green,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    doctorAlert
+                        ? "Doctor Attention Required"
+                        : "No Critical Alerts",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ⚠️ Warnings List
+            if (warnings.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: warnings.length,
+                  itemBuilder: (context, index) {
+                    final w = warnings[index];
+
+                    return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.warning,
+                          color: w["severity"] == "high"
+                              ? Colors.red
+                              : Colors.orange,
+                        ),
+                        title: Text(w["message"]),
+                        subtitle: Text("Severity: ${w["severity"]}"),
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              const Text(
+                "No warnings detected.",
+                style: TextStyle(fontSize: 16),
+              ),
+
+            const SizedBox(height: 20),
+
+            // 💡 Recommendation
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    "Recommendation",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    recommendation,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-
 }
