@@ -193,20 +193,57 @@ class _TrendsScreenState extends State<TrendsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Trends"),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+          ),
+        ),
+        title: const Text(
+          "Trends",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leadingWidth: 90,
+        leading: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40),
+            ),
+            Expanded(
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
+          ],
+        ),
         actions: [
-          DropdownButton<String>(
-            value: period,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: "weekly", child: Text("Weekly")),
-              DropdownMenuItem(value: "monthly", child: Text("Monthly")),
-            ],
-            onChanged: (val) {
-              if (val == null) return;
-              setState(() => period = val);
-              loadHistory();
-            },
+          Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: const Color(0xFFAC46FF),
+            ),
+            child: DropdownButton<String>(
+              value: period,
+              underline: const SizedBox(),
+              iconEnabledColor: Colors.white,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              items: const [
+                DropdownMenuItem(value: "weekly", child: Text("Weekly")),
+                DropdownMenuItem(value: "monthly", child: Text("Monthly")),
+              ],
+              onChanged: (val) {
+                if (val == null) return;
+                setState(() => period = val);
+                loadHistory();
+              },
+            ),
           ),
           const SizedBox(width: 12),
         ],

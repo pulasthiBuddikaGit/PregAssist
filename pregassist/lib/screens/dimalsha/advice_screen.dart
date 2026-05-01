@@ -229,26 +229,29 @@ class AdviceScreen extends StatelessWidget {
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
           ),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/logo.png', height: 30, fit: BoxFit.contain),
-            const SizedBox(width: 20),
-            const Text(
-              "Care Plan",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        title: const Text(
+          "Care Plan",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        leadingWidth: 90,
+        leading: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40),
+            ),
+            Expanded(
+              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+            ),
+          ],
         ),
       ),
       body: Container(
