@@ -3,6 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../models/pulasthi/assessment_data.dart';
 import '../../services/ctg_counterfactual_service.dart';
 import '../../services/ctg_shadow_explainability_service.dart';
+import '../../services/ctg_selective_prediction_service.dart';
 import '../../services/fetal_onnx_service.dart';
 import 'ctg_segment_screen.dart';
 
@@ -24,6 +25,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
 
   PredictionResult? _prediction;
   OnnxPrediction? _onnxPrediction;
+  CtgSelectivePredictionResult? _selectivePrediction;
   ShadowExplainabilityResult? _shadowExplanation;
   CounterfactualSearchResult? _counterfactual;
   String? _explanationError;
@@ -167,6 +169,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       _isLoading = true;
       _prediction = null;
       _onnxPrediction = null;
+      _selectivePrediction = null;
       _shadowExplanation = null;
       _explanationError = null;
       _resetCounterfactualState();
@@ -192,6 +195,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       // Main prediction from ONNX model.
       final onnxPrediction =
           await FetalOnnxService.instance.predictDetailed(features);
+      final selectivePrediction =
+          CtgSelectivePredictionService.instance.evaluate(onnxPrediction);
 
       // Explanation path from shadow tree (approximation model).
       ShadowExplainabilityResult? explanation;
@@ -206,6 +211,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
       setState(() {
         _prediction = _predictionFromClass(onnxPrediction.label);
         _onnxPrediction = onnxPrediction;
+        _selectivePrediction = selectivePrediction;
         _shadowExplanation = explanation;
         _explanationError = explanationError;
         widget.data.prediction = _prediction;
@@ -261,6 +267,7 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     widget.data.prolongedDecelerations = 0;
     widget.data.prediction = null;
     _onnxPrediction = null;
+    _selectivePrediction = null;
     _shadowExplanation = null;
     _explanationError = null;
     _resetCounterfactualState();
@@ -311,6 +318,24 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                   'This result is produced by the offline ML model using the entered CTG parameters.',
                   style: TextStyle(color: Colors.black54),
                 ),
+                if (_selectivePrediction != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _modeChipBackground(),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      '${_selectiveModeText()}. ${_selectivePrediction!.reason}',
+                      style: TextStyle(
+                        color: _modeChipTextColor(),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -338,8 +363,11 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                 ),
                 if (_shadowExplanation != null) ...[
                   const SizedBox(height: 18),
-                  const Text(
-                    'Why the AI predicted this',
+                  Text(
+                    (_selectivePrediction?.isBorderline ?? false) ||
+                            (_selectivePrediction?.isReviewNeeded ?? false)
+                        ? 'Most likely class explanation: ${_mostLikelyClassText()}'
+                        : 'Why the AI predicted this',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -444,7 +472,8 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   }
 
   String _explanationSpeechText() {
-    final classLabel = _prediction?.label.split(' (').first ?? 'Unknown';
+    final selective = _selectivePrediction;
+    final classLabel = _displayPredictionLabel().replaceAll(' / ', ' or ');
     final reasons = _shadowExplanation?.keyFactors ??
         _prediction?.reasons ??
         const <String>[];
@@ -454,7 +483,14 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
         .toList();
 
     final parts = <String>[
-      'The AI predicted $classLabel fetal status.',
+      if (selective?.isReviewNeeded ?? false)
+        'The AI recommends clinical review because model uncertainty is high.'
+      else
+        'The AI predicted $classLabel fetal status.',
+      if (selective != null) selective.reason,
+      if ((selective?.isBorderline ?? false) ||
+          (selective?.isReviewNeeded ?? false))
+        'The clinical explanation is for the most likely class, ${_mostLikelyClassText()}.',
       if (cleanedReasons.isNotEmpty) 'Key reasons: ${cleanedReasons.join(' ')}',
       if ((_shadowExplanation?.decisionSummary ?? '').isNotEmpty)
         'Decision summary: ${_shadowExplanation!.decisionSummary}',
@@ -516,6 +552,14 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
 
   Future<void> _prepareCounterfactual() async {
     if (_onnxPrediction == null || widget.data.segmentDuration == null) {
+      return;
+    }
+    if (_selectivePrediction?.isReviewNeeded ?? false) {
+      setState(() {
+        _counterfactual = null;
+        _counterfactualError =
+            'Counterfactual suggestions are unavailable when the model marks the result as Review Needed. Please review the CTG clinically first.';
+      });
       return;
     }
     if (_counterfactual != null) {
@@ -635,6 +679,16 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                     'This search tests small nearby changes in baseline and event counts, then re-runs the main ONNX model to see whether the class improves.',
                     style: TextStyle(color: Colors.black54),
                   ),
+                  if (_selectivePrediction?.isBorderline ?? false) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'This result is borderline, so counterfactuals are based on the most likely class: ${_mostLikelyClassText()}.',
+                      style: const TextStyle(
+                        color: Color(0xFF92400E),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   if (_isCounterfactualLoading && _counterfactual == null) ...[
                     const Center(
@@ -792,6 +846,85 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
     }
   }
 
+  String _displayPredictionLabel() {
+    final selective = _selectivePrediction;
+    if (selective == null || selective.isConfident) {
+      return _prediction?.label ?? 'Unknown';
+    }
+    if (selective.isReviewNeeded) {
+      return 'Review Needed';
+    }
+    final secondary = selective.secondaryClass;
+    if (secondary == null) return _classLabel(selective.primaryClass);
+    return '${_classLabel(selective.primaryClass)} / ${_classLabel(secondary)}';
+  }
+
+  String _selectiveModeText() {
+    final selective = _selectivePrediction;
+    if (selective == null) return 'Mode: Raw ONNX';
+    return 'Mode: ${selective.modeLabel}';
+  }
+
+  String _mostLikelyClassText() {
+    final selective = _selectivePrediction;
+    final cls = selective?.primaryClass ?? _onnxPrediction?.label;
+    if (cls == null) return 'Unknown';
+    return _classLabel(cls);
+  }
+
+  String _formatPercent(double value) {
+    return '${(value * 100).toStringAsFixed(1)}%';
+  }
+
+  Color _predictionCardBackground() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFFEFF6FF);
+    if (selective?.isBorderline ?? false) return const Color(0xFFFFFBEB);
+    return _prediction!.backgroundColor;
+  }
+
+  Color _predictionCardBorder() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFFBFDBFE);
+    if (selective?.isBorderline ?? false) return const Color(0xFFFDE68A);
+    return _prediction!.borderColor;
+  }
+
+  Color _predictionTextColor() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFF1E40AF);
+    if (selective?.isBorderline ?? false) return const Color(0xFFB45309);
+    return _prediction!.textColor;
+  }
+
+  Color _predictionIconColor() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFF2563EB);
+    if (selective?.isBorderline ?? false) return const Color(0xFFD97706);
+    return _prediction!.iconColor;
+  }
+
+  IconData _predictionIcon() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return Icons.manage_search;
+    if (selective?.isBorderline ?? false) return Icons.warning_amber_rounded;
+    return _prediction!.icon;
+  }
+
+  Color _modeChipBackground() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFFDBEAFE);
+    if (selective?.isBorderline ?? false) return const Color(0xFFFEF3C7);
+    return const Color(0xFFDCFCE7);
+  }
+
+  Color _modeChipTextColor() {
+    final selective = _selectivePrediction;
+    if (selective?.isReviewNeeded ?? false) return const Color(0xFF1E40AF);
+    if (selective?.isBorderline ?? false) return const Color(0xFF92400E);
+    return const Color(0xFF166534);
+  }
+
   Widget _buildParameterRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -809,6 +942,27 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             child: Text(
               value,
               style: const TextStyle(color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulletText(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '- ',
+            style: TextStyle(color: Colors.black45, fontSize: 14),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
         ],
@@ -1185,13 +1339,15 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
   Widget _buildPredictionResult() {
     final onnx = _onnxPrediction;
     final explanation = _shadowExplanation;
-    final classLabel = _prediction!.label.split(' (').first;
+    final selective = _selectivePrediction;
+    final classLabel = _mostLikelyClassText();
+    final displayLabel = _displayPredictionLabel();
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _prediction!.backgroundColor,
-        border: Border.all(color: _prediction!.borderColor),
+        color: _predictionCardBackground(),
+        border: Border.all(color: _predictionCardBorder()),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -1204,21 +1360,74 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(_prediction!.icon, color: _prediction!.iconColor, size: 32),
+              Icon(_predictionIcon(), color: _predictionIconColor(), size: 32),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  _prediction!.label,
+                  displayLabel,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: _prediction!.textColor,
+                    color: _predictionTextColor(),
                   ),
                 ),
               ),
+              if (selective != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _modeChipBackground(),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    selective.modeLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: _modeChipTextColor(),
+                    ),
+                  ),
+                ),
             ],
           ),
-          if (onnx?.confidence != null) ...[
+          if (selective != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${_selectiveModeText()}  |  Top probability: ${_formatPercent(selective.topProbability)}  |  Margin: ${_formatPercent(selective.margin)}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            if (!selective.isConfident) ...[
+              const SizedBox(height: 6),
+              Text(
+                selective.isReviewNeeded
+                    ? 'Reason: ${selective.reason}'
+                    : '${selective.reason} Most likely class: ${_classLabel(selective.primaryClass)}.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: selective.isReviewNeeded
+                      ? const Color(0xFF1E40AF)
+                      : const Color(0xFF92400E),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (selective.secondaryClass != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Closest classes: ${_classLabel(selective.primaryClass)} ${_formatPercent(selective.topProbability)} vs ${_classLabel(selective.secondaryClass!)} ${_formatPercent(selective.secondProbability)}.',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ] else if (onnx?.confidence != null) ...[
             const SizedBox(height: 8),
             Text(
               'Confidence: ${(onnx!.confidence! * 100).toStringAsFixed(1)}%',
@@ -1245,7 +1454,11 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Why the AI predicted $classLabel',
+                  (selective?.isReviewNeeded ?? false)
+                      ? 'Why review is needed'
+                      : (selective?.isBorderline ?? false)
+                          ? 'Why this is borderline'
+                          : 'Why the AI predicted $classLabel',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -1267,6 +1480,31 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
             ],
           ),
           const SizedBox(height: 8),
+          if (selective?.isReviewNeeded ?? false) ...[
+            _buildBulletText(selective!.reason),
+            _buildBulletText(
+              'The closest classes are ${_classLabel(selective.primaryClass)} and ${_classLabel(selective.secondaryClass ?? selective.primaryClass)}.',
+            ),
+          ] else if (selective?.isBorderline ?? false) ...[
+            _buildBulletText(selective!.reason),
+            _buildBulletText(
+              'The explanation below describes the most likely class: ${_classLabel(selective.primaryClass)}.',
+            ),
+          ],
+          if (((selective?.isBorderline ?? false) ||
+                  (selective?.isReviewNeeded ?? false)) &&
+              explanation != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Most likely class clinical factors: ${_mostLikelyClassText()}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           ...(explanation?.keyFactors.isNotEmpty ?? false
                   ? explanation!.keyFactors
                   : _prediction!.reasons)
@@ -1329,6 +1567,13 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
               style: const TextStyle(fontSize: 13, color: Colors.black54),
             ),
           ],
+          if (selective?.isReviewNeeded ?? false) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'Counterfactuals are disabled for Review Needed results because the model uncertainty is high.',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ],
           const SizedBox(height: 10),
           Wrap(
             spacing: 18,
@@ -1346,9 +1591,12 @@ class _EventsResultScreenState extends State<EventsResultScreen> {
                 ),
               ),
               TextButton(
-                onPressed: _showCounterfactuals,
+                onPressed: (selective?.isReviewNeeded ?? false)
+                    ? null
+                    : _showCounterfactuals,
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF2B80FF),
+                  disabledForegroundColor: Colors.black38,
                   padding: EdgeInsets.zero,
                 ),
                 child: const Text(
