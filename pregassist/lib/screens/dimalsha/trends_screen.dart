@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../services/vitals_api.dart';
+import '../dimalsha/maternal_model.dart';
 
 class TrendsScreen extends StatefulWidget {
   final String motherId;
@@ -30,7 +30,7 @@ class _TrendsScreenState extends State<TrendsScreen> {
     });
 
     try {
-      final data = await VitalsApi.getHistory(
+      final data = await MaternalService.getHistory(
         motherId: widget.motherId,
         period: period,
       );
@@ -221,6 +221,31 @@ class _TrendsScreenState extends State<TrendsScreen> {
                       padding: const EdgeInsets.all(12),
                       child: ListView(
                         children: [
+                          Card(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Risk Trend",
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    history.last["forecast"]?["trend"] ?? "No trend data",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: (history.last["forecast"]?["trend"] == "increasing")
+                                          ? Colors.red
+                                          : Colors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                           buildChart("Systolic BP", "SystolicBP"),
                           buildChart("Diastolic BP", "DiastolicBP"),
                           buildChart("Blood Sugar (BS)", "BS"),
