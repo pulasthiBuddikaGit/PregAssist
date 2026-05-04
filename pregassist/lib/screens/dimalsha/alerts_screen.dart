@@ -56,7 +56,7 @@ class AlertsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 🔴 Alert Banner
+            // Alert Banner
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
@@ -128,7 +128,7 @@ class AlertsScreen extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // ⚠️ Warnings List
+            // Warnings List
             if (warnings.isNotEmpty)
               Expanded(
                 child: ListView.builder(
@@ -195,7 +195,7 @@ class AlertsScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 💡 Recommendation
+            // Recommendation
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
