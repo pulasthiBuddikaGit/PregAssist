@@ -12,6 +12,7 @@ class MaternalRiskResult {
   final String recommendation;
   final bool doctorAlert;
   final List<String> advice;
+  final List<dynamic> history;
 
   MaternalRiskResult({
     required this.risk,
@@ -24,6 +25,7 @@ class MaternalRiskResult {
     required this.recommendation,
     required this.doctorAlert,
     required this.advice,
+    required this.history,
   });
 
   factory MaternalRiskResult.fromJson(Map<String, dynamic> json) {
@@ -44,12 +46,13 @@ class MaternalRiskResult {
       recommendation: json['recommendation'] ?? '',
       doctorAlert: json['doctor_alert'] ?? false,
       advice: List<String>.from(json['advice'] ?? []),
+      history: json['history'] ?? [],
     );
   }
 }
 
 class MaternalService {
-  static const String baseUrl = 'http://127.0.0.1:5000';
+  static const String baseUrl = 'https://pregassist-backend-production.up.railway.app';
 
   static Future<MaternalRiskResult> predict({
     required String motherId,
@@ -78,22 +81,27 @@ class MaternalService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getHistory({
-    required String motherId,
-    String period = 'weekly',
-  }) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/vitals/history?motherId=$motherId&period=$period'),
-      headers: {'Content-Type': 'application/json'},
+  static Future<List<dynamic>> getHistory(String motherId) async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/history/$motherId"),
     );
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Map<String, dynamic>.from(item)).toList();
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
     } else {
-      throw Exception(
-        'History fetch failed: ${response.statusCode} ${response.body}',
-      );
+      throw Exception("Failed to load history");
+    }
+  }
+
+  static Future<List<dynamic>> getDoctorCriticalAlerts() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/alerts/critical"),
+    );
+
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    } else {
+      throw Exception("Failed to load critical alerts");
     }
   }
 }

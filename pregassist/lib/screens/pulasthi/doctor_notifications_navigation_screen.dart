@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'critical_alerts_screen.dart';
+import '../../utils/critical_alert_state.dart';
 
 class DoctorNotificationsNavigationScreen extends StatelessWidget {
   const DoctorNotificationsNavigationScreen({super.key});
 
   void _showComingSoon(BuildContext context, String section) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$section UI is ready. Logic will be added soon.')),
+      SnackBar(
+          content: Text('$section UI is ready. Logic will be added soon.')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: criticalAlertState,
+      builder: (context, hasUnreadCriticalAlert, _) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -75,12 +81,14 @@ class DoctorNotificationsNavigationScreen extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.notifications_active, color: Color(0xFF2B80FF), size: 28),
+                      Icon(Icons.notifications_active,
+                          color: Color(0xFF2B80FF), size: 28),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Doctor Notification Navigation',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -100,28 +108,42 @@ class DoctorNotificationsNavigationScreen extends StatelessWidget {
                         subtitle: 'High-priority patient health notifications',
                         icon: Icons.warning_amber_rounded,
                         color: const Color(0xFFFF5F6D),
-                        onTap: () => _showComingSoon(context, 'Critical Alerts'),
+                        showBadge: hasUnreadCriticalAlert,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const CriticalAlertsScreen()),
+                          );
+                        },
                       ),
                       _NotificationNavTile(
                         title: 'Vitals Watchlist',
                         subtitle: 'Track incoming physical health signals',
                         icon: Icons.monitor_heart,
                         color: const Color(0xFF00B894),
-                        onTap: () => _showComingSoon(context, 'Vitals Watchlist'),
+                        showBadge: false,
+                        onTap: () =>
+                            _showComingSoon(context, 'Vitals Watchlist'),
                       ),
                       _NotificationNavTile(
                         title: 'Medication Reminders',
                         subtitle: 'Upcoming medication and treatment reminders',
                         icon: Icons.medical_services_outlined,
                         color: const Color(0xFF2B80FF),
-                        onTap: () => _showComingSoon(context, 'Medication Reminders'),
+                        showBadge: false,
+                        onTap: () =>
+                            _showComingSoon(context, 'Medication Reminders'),
                       ),
                       _NotificationNavTile(
                         title: 'All Notifications',
                         subtitle: 'Open full list of doctor notifications',
                         icon: Icons.notifications_none,
                         color: const Color(0xFF7D5FFF),
-                        onTap: () => _showComingSoon(context, 'All Notifications'),
+                        showBadge: false,
+                        onTap: () =>
+                            _showComingSoon(context, 'All Notifications'),
                       ),
                     ],
                   ),
@@ -132,6 +154,8 @@ class DoctorNotificationsNavigationScreen extends StatelessWidget {
         ),
       ),
     );
+      },
+    );
   }
 }
 
@@ -140,6 +164,7 @@ class _NotificationNavTile extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final bool showBadge;
   final VoidCallback onTap;
 
   const _NotificationNavTile({
@@ -147,6 +172,7 @@ class _NotificationNavTile extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
+    required this.showBadge,
     required this.onTap,
   });
 
@@ -166,14 +192,33 @@ class _NotificationNavTile extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: color),
+                Stack(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(icon, color: color),
+                    ),
+
+                    // 🔴 RED DOT — only when showBadge is true
+                    if (showBadge)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -182,7 +227,8 @@ class _NotificationNavTile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -192,7 +238,8 @@ class _NotificationNavTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black38),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 16, color: Colors.black38),
               ],
             ),
           ),
