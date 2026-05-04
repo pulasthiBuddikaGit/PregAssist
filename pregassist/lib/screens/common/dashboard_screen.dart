@@ -31,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = false;
   List<dynamic> historyList = [];
   Map<String, dynamic>? lastResult;
+  final ScrollController _formScrollController = ScrollController();
 
   void generateReport(dynamic item) async {
     try {
@@ -50,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         historyList = res;
 
         if (historyList.isNotEmpty) {
-          // getHistory returns newest-first (sort descending), so first = most recent
+          //  most recent history
           lastResult = historyList.first;
         }
       });
@@ -80,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (final c in controllers.values) {
       c.dispose();
     }
+    _formScrollController.dispose();
     super.dispose();
   }
 
@@ -148,13 +150,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> analyzeHealth() async {
-    // Run per-field validation
+    //  validation
     final errors = <String, String?>{};
     for (final key in controllers.keys) {
       errors[key] = _validateField(key);
     }
 
-    // Add cross-validation for Systolic & Diastolic BP
+    // cross-validation for Systolic & Diastolic BP
     final sbpVal = double.tryParse(controllers["SystolicBP"]!.text);
     final dbpVal = double.tryParse(controllers["DiastolicBP"]!.text);
     if (sbpVal != null && dbpVal != null && sbpVal <= dbpVal) {
@@ -207,8 +209,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         result = prediction;
         historyList = prediction.history;
 
-        // Build lastResult directly from the just-submitted inputs + prediction
-        // so Recent Activity always shows the latest prediction, not a history DB entry
         lastResult = {
           "risk_level": prediction.risk,
           "confidence": prediction.confidence,
@@ -223,7 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         };
       });
 
-      // 🔴 Trigger notification badge for high-risk alerts
+      // high-risk alerts trigger notification
       if (prediction.risk.toLowerCase().contains('high')) {
         criticalAlertState.value = true;
       }
@@ -290,7 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 🔹 GAUGE FOR HEALTH SCORE
+              //  HEALTH SCORE
               SizedBox(
                 height: 120,
                 width: 120,
@@ -329,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               
               const SizedBox(height: 20),
 
-              // 🔹 RISK BADGE
+              
               Builder(builder: (_) {
                 final riskLower = result!.risk.toLowerCase();
                 final Color riskColor = riskLower.contains("high")
@@ -372,7 +372,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 5),
 
-              // 🔹 CONFIDENCE
+              // CONFIDENCE
               Text(
                 "AI Confidence: ${result!.confidence.toStringAsFixed(1)}%",
                 style: const TextStyle(color: Colors.grey),
@@ -380,7 +380,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 15),
 
-              // 🔥 FORECAST & FACTOR
+              // FORECAST & FACTOR
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -403,7 +403,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 15),
 
-              // 🔥 RECOMMENDATION
+              // RECOMMENDATION
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -425,7 +425,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  if (result!.doctorAlert)
+                  if ((result!.risk ?? "").toLowerCase() != "low risk")
                     _buildIconAction(Icons.warning_amber_rounded, "Alerts", Colors.red, () {
                       Navigator.push(context, MaterialPageRoute(
                         builder: (_) => AlertsScreen(
@@ -507,13 +507,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Colors.green;
   }
 
-  // 🔥 UPDATED WELCOME UI WITH CAROUSEL
+  // WELCOME UI WITH CAROUSEL
   Widget _buildWelcomeUI() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
+    return Column(
+      key: const ValueKey("welcome_ui"),
+      children: [
 
-          // 🔥 IMAGE SLIDER (KEEP SAME)
+          
           CarouselSlider(
             options: CarouselOptions(
               height: 200,
@@ -552,7 +552,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 25),
 
-          // 🔥 BUTTON
+          
           Container(
             width: double.infinity,
             height: 50,
@@ -577,7 +577,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 25),
 
-          // 🔥 NEW PREMIUM RECENT ACTIVITY CARD
+        
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -625,7 +625,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
-                      // 🔥 RISK LABEL
+                      // RISK LABEL
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
@@ -643,7 +643,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 10),
 
-                      // 🔥 STATS
+                      // STATS
                       Row(
                         children: [
                           Expanded(child: _miniStat("Week", lastResult!["Week"].toString())),
@@ -654,9 +654,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 15),
 
-                      // 🔥 VITALS BOXES
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           _miniBox("BP",
                               "${lastResult!["SystolicBP"]}/${lastResult!["DiastolicBP"]}"),
@@ -667,7 +668,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                       const SizedBox(height: 15),
 
-                      // 🔥 BUTTONS
+                      // BUTTONS
                       Row(
                         children: [
                           Expanded(
@@ -705,7 +706,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 20),
 
-          // 🔥 EXTRA NICE TOUCH
+          
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
@@ -727,8 +728,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _miniStat(String title, String value) {
@@ -759,98 +759,97 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildFormUI() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF2B80FF)),
-                onPressed: () => setState(() => showForm = false),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Enter Your Health Details",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2B80FF)),
-                    ),
-                    Text(
-                      "Provide accurate values for better prediction",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
+    return Column(
+      key: const ValueKey("form_ui"),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF2B80FF)),
+                  onPressed: () => setState(() => showForm = false),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Color(0xFF2B80FF)),
-                tooltip: "Clear fields",
-                onPressed: _clearForm,
-              ),
-            ],
-          ),
-          const SizedBox(height: 25),
-
-          _buildSectionTitle("Basic Info", Icons.person_outline),
-          _buildPremiumInput("Pregnancy Week", "Weeks", Icons.calendar_month, "e.g. 24"),
-          _buildPremiumInput("Age", "Years", Icons.cake, "e.g. 28"),
-
-          const SizedBox(height: 20),
-
-          _buildSectionTitle("Blood Pressure", Icons.favorite_border),
-          _buildPremiumInput("SystolicBP", "mmHg", Icons.arrow_upward, "e.g. 120"),
-          _buildPremiumInput("DiastolicBP", "mmHg", Icons.arrow_downward, "e.g. 80"),
-
-          const SizedBox(height: 20),
-
-          _buildSectionTitle("Health Metrics", Icons.health_and_safety_outlined),
-          _buildPremiumInput("BS", "mmol/L", Icons.water_drop_outlined, "e.g. 5.0"),
-          _buildPremiumInput("BodyTemp", "°C", Icons.thermostat, "e.g. 37.0"),
-          _buildPremiumInput("HeartRate", "BPM", Icons.monitor_heart_outlined, "e.g. 85"),
-
-          const SizedBox(height: 30),
-
-          // Analyze Button
-          Container(
-            width: double.infinity,
-            height: 55,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
-              ),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2B80FF).withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Enter Your Health Details",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2B80FF)),
+                      ),
+                      Text(
+                        "Provide accurate values for better prediction",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Color(0xFF2B80FF)),
+                  tooltip: "Clear fields",
+                  onPressed: _clearForm,
                 ),
               ],
             ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+            const SizedBox(height: 25),
+
+            _buildSectionTitle("Basic Info", Icons.person_outline),
+            _buildPremiumInput("Pregnancy Week", "Weeks", Icons.calendar_month, "e.g. 24"),
+            _buildPremiumInput("Age", "Years", Icons.cake, "e.g. 28"),
+
+            const SizedBox(height: 20),
+
+            _buildSectionTitle("Blood Pressure", Icons.favorite_border),
+            _buildPremiumInput("SystolicBP", "mmHg", Icons.arrow_upward, "e.g. 120"),
+            _buildPremiumInput("DiastolicBP", "mmHg", Icons.arrow_downward, "e.g. 80"),
+
+            const SizedBox(height: 20),
+
+            _buildSectionTitle("Health Metrics", Icons.health_and_safety_outlined),
+            _buildPremiumInput("BS", "mmol/L", Icons.water_drop_outlined, "e.g. 5.0"),
+            _buildPremiumInput("BodyTemp", "°C", Icons.thermostat, "e.g. 37.0"),
+            _buildPremiumInput("HeartRate", "BPM", Icons.monitor_heart_outlined, "e.g. 85"),
+
+            const SizedBox(height: 30),
+
+            // Analyze Button
+            Container(
+              width: double.infinity,
+              height: 55,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
                 ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2B80FF).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-              onPressed: isLoading ? null : analyzeHealth,
-              child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                      "Analyze Health Risk",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                onPressed: isLoading ? null : analyzeHealth,
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Analyze Health Risk",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
+            const SizedBox(height: 100),
+          ],
+        );
   }
 
   Widget _buildSectionTitle(String title, IconData icon) {
@@ -1018,11 +1017,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           centerTitle: true,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(20),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: showForm ? _buildFormUI() : _buildWelcomeUI(),
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: showForm ? _buildFormUI() : _buildWelcomeUI(),
+            ),
           ),
         ),
       ),

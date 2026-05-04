@@ -91,7 +91,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 🔍 SEARCH BAR
+               
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: TextField(
@@ -108,7 +108,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
 
-                // 📜 LIST
+                
                 Expanded(
                   child: history.isEmpty
                       ? const Center(child: Text("No history available"))
@@ -141,7 +141,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── GRADIENT HEADER ──────────────────────────────────────
+              
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -178,7 +178,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
 
-              // ── SCROLLABLE BODY ───────────────────────────────────────
+              
               SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -194,7 +194,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // Circular gauge
+                        
                         SizedBox(
                           width: 90,
                           height: 90,
@@ -363,7 +363,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔥 HEADER
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -389,7 +389,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           const SizedBox(height: 12),
 
-          // 📊 MAIN DATA
+          // main data part
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -402,7 +402,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           const SizedBox(height: 15),
 
-          // 💙 VITAL BOXES
+          // vital inputs boxes
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -415,7 +415,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           const SizedBox(height: 15),
 
-          // 🔘 BUTTONS
+          // buttons
           Row(
             children: [
               Expanded(

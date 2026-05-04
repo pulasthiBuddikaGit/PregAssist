@@ -106,7 +106,7 @@ class AiExplanationScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
 
-              // 🔥 TOP FACTOR
+              // TOP FACTOR
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -132,7 +132,7 @@ class AiExplanationScreen extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              // 🔥 AI EXPLANATION
+              // AI EXPLANATION
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
@@ -162,7 +162,7 @@ class AiExplanationScreen extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-              // 🔥 HORIZONTAL BARS
+              // HORIZONTAL BARS
               Expanded(
                 child: ListView(
                   children: displayEntries.map((entry) {

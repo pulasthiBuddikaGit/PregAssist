@@ -30,7 +30,7 @@ class TrendScreen extends StatelessWidget {
     return Icons.trending_flat;
   }
 
-  // 🔥 ONLY LAST 5 DATA POINTS
+  
   List<FlSpot> buildChartData() {
     List<FlSpot> spots = [];
 
@@ -71,7 +71,7 @@ class TrendScreen extends StatelessWidget {
     final trend = forecast["trend"] ?? "stable";
     final details = forecast["details"] ?? {};
 
-    // Gate: need at least 3 records for meaningful trend analysis
+    // at least 3 records for meaningful trend analysis
     final bool hasEnoughData = history.length >= 3 &&
         trend.toString().toLowerCase() != "insufficient_data";
 
@@ -109,7 +109,7 @@ class TrendScreen extends StatelessWidget {
           child: Column(
             children: [
 
-            // ── INSUFFICIENT DATA STATE ──────────────────────────────
+            
             if (!hasEnoughData) ...[
               const SizedBox(height: 30),
               Container(
@@ -169,10 +169,10 @@ class TrendScreen extends StatelessWidget {
               ),
             ],
 
-            // ── FULL TREND VIEW (3+ records) ─────────────────────────
+            // 
             if (hasEnoughData) ...[
 
-            // 🔥 TREND SUMMARY
+            // 
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -206,7 +206,7 @@ class TrendScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // 🔥 AI INSIGHT BOX
+            // AI INSIGHT BOX
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -233,7 +233,7 @@ class TrendScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
-            // 🔥 CHART TITLE
+            // CHART TITLE
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -264,7 +264,7 @@ class TrendScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // 🔥 LINE CHART
+            // LINE CHART
             SizedBox(
               height: 280,
               child: Container(
@@ -444,7 +444,7 @@ class TrendScreen extends StatelessWidget {
               ),
             ),
 
-            ], // end hasEnoughData block
+            ], 
           ],
         ),
       ),
