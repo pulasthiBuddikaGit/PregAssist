@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 class LlmService {
   // ── Config ─────────────────────────────────────────────────────────────────
   static const String _apiKey =
-      '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';
+      'xai-D1tgKZQ7O7X7tixQGai31Nu8dIcV840oosFpKAp2RsyKUc5ea31WbqGlfLtyV3Iv4LB33O7UKgJaDQfv';
   static const String _baseUrl =
       'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'llama-3.3-70b-versatile'; // stable free model
