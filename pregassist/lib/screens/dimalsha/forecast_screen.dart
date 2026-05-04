@@ -11,15 +11,22 @@ class ForecastScreen extends StatelessWidget {
     return Colors.green;
   }
 
+  String fixSeverity(String trend, String severity) {
+    if (trend == "increasing") return "high";
+    if (trend == "slightly_increasing") return "medium";
+    return "low";
+  }
+
   @override
   Widget build(BuildContext context) {
     final details = forecast['details'] ?? {};
     final trend = forecast['trend'] ?? "stable";
     final message = forecast['message'] ?? "";
-    final severity = forecast['severity'] ?? "low";
+    final severity = fixSeverity(trend, forecast['severity'] ?? "low");
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F0FF),
+
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -59,15 +66,15 @@ class ForecastScreen extends StatelessWidget {
         child: Column(
           children: [
 
-            // 🔥 GLASS STYLE TREND CARD
+            // 🔥 TREND CARD
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    getTrendColor(trend).withOpacity(0.25),
-                    Colors.white.withOpacity(0.2),
+                    getTrendColor(trend).withOpacity(0.2),
+                    Colors.white.withOpacity(0.3),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
@@ -77,7 +84,7 @@ class ForecastScreen extends StatelessWidget {
 
                   const Text(
                     "Overall Trend",
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
                   ),
 
                   const SizedBox(height: 10),
@@ -110,7 +117,7 @@ class ForecastScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 🔥 MESSAGE BOX (IMPROVED)
+            // 🔥 MESSAGE
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -125,7 +132,7 @@ class ForecastScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       message,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -173,21 +180,28 @@ class ForecastScreen extends StatelessWidget {
         children: [
 
           CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
-            child: Icon(icon, color: color),
+            radius: 22,
+            backgroundColor: color.withOpacity(0.15),
+            child: Icon(icon, color: color, size: 20),
           ),
 
           const SizedBox(width: 15),
 
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 15)),
+                const Text(
+                  "Trend indicator",
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
             ),
           ),
 
           Text(
-            (value ?? "-").toUpperCase(),
+            (value ?? "-").replaceAll("_", " ").toUpperCase(),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: color,

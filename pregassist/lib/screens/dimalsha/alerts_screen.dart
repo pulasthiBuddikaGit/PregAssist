@@ -58,30 +58,70 @@ class AlertsScreen extends StatelessWidget {
           children: [
             // 🔴 Alert Banner
             Container(
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
               decoration: BoxDecoration(
-                color: isHighRisk ? Colors.red[50] : Colors.green[50],
-                borderRadius: BorderRadius.circular(20),
-              ),
+                  gradient: LinearGradient(
+                    colors: isHighRisk
+                        ? [Colors.red.shade400, Colors.red.shade800]
+                        : (doctorAlert
+                            ? [Colors.orange.shade400, Colors.orange.shade800]
+                            : [Colors.green.shade400, Colors.green.shade700]),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isHighRisk ? Colors.red : Colors.green)
+                          .withOpacity(0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    )
+                  ]),
               child: Column(
                 children: [
                   Icon(
-                    doctorAlert
-                        ? Icons.warning_rounded
-                        : Icons.check_circle,
+                    isHighRisk
+                        ? Icons.error_outline
+                        : (doctorAlert
+                            ? Icons.warning_amber_rounded
+                            : Icons.check_circle_outline),
                     size: 60,
-                    color: doctorAlert ? Colors.red : Colors.green,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
-                    doctorAlert
-                        ? "Doctor Attention Required"
-                        : "No Critical Alerts",
+                    isHighRisk
+                        ? "High Risk Detected!"
+                        : (doctorAlert
+                            ? "Doctor Attention Required"
+                            : "No Critical Alerts"),
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
+                  if (isHighRisk) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Notification sent to doctor.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ] else if (doctorAlert) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Doctor attention recommended.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -95,19 +135,53 @@ class AlertsScreen extends StatelessWidget {
                   itemCount: warnings.length,
                   itemBuilder: (context, index) {
                     final w = warnings[index];
+                    final isHighSeverity = w["severity"] == "high";
 
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                              color: isHighSeverity
+                                  ? Colors.red.shade200
+                                  : Colors.orange.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ]),
                       child: ListTile(
-                        leading: Icon(
-                          Icons.warning,
-                          color: w["severity"] == "high"
-                              ? Colors.red
-                              : Colors.orange,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isHighSeverity
+                                ? Colors.red.shade50
+                                : Colors.orange.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.warning_rounded,
+                            color: isHighSeverity ? Colors.red : Colors.orange,
+                          ),
                         ),
-                        title: Text(w["message"]),
-                        subtitle: Text("Severity: ${w["severity"]}"),
+                        title: Text(
+                          w["message"],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          "Severity: ${w["severity"].toString().toUpperCase()}",
+                          style: TextStyle(
+                            color: isHighSeverity
+                                ? Colors.red.shade700
+                                : Colors.orange.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -123,6 +197,7 @@ class AlertsScreen extends StatelessWidget {
 
             // 💡 Recommendation
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
@@ -141,6 +216,7 @@ class AlertsScreen extends StatelessWidget {
                   Text(
                     recommendation,
                     textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ],
               ),

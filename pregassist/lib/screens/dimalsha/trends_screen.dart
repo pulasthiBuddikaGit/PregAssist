@@ -1,212 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../dimalsha/maternal_model.dart';
 
-class TrendsScreen extends StatefulWidget {
-  final String motherId;
-  const TrendsScreen({super.key, required this.motherId});
+class TrendScreen extends StatelessWidget {
+  final Map<String, dynamic> forecast;
+  final List<dynamic> history;
 
-  @override
-  State<TrendsScreen> createState() => _TrendsScreenState();
-}
+  const TrendScreen({
+    super.key,
+    required this.forecast,
+    required this.history,
+  });
 
-class _TrendsScreenState extends State<TrendsScreen> {
-  String period = "weekly";
-  bool loading = true;
-  String? errorMsg;
-
-  List<Map<String, dynamic>> history = [];
-
-  @override
-  void initState() {
-    super.initState();
-    loadHistory();
+  Color getTrendColor(String trend) {
+    if (trend == "increasing") return Colors.red;
+    if (trend == "decreasing") return Colors.green;
+    return Colors.orange;
   }
 
-  Future<void> loadHistory() async {
-    setState(() {
-      loading = true;
-      errorMsg = null;
-    });
-
-    try {
-      final data = await MaternalService.getHistory(
-        motherId: widget.motherId,
-        period: period,
-      );
-
-      setState(() {
-        history = data;
-        loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        errorMsg = e.toString();
-        loading = false;
-      });
-    }
+  String getTrendText(String trend) {
+    if (trend == "increasing") return "Health risk is increasing over time";
+    if (trend == "slightly_increasing") return "Health shows a slight increase over time";
+    if (trend == "decreasing") return "Health condition is improving";
+    return "No significant change detected";
   }
 
-  List<FlSpot> buildSpots(String field) {
-    final spots = <FlSpot>[];
+  IconData getTrendIcon(String trend) {
+    if (trend == "increasing") return Icons.trending_up;
+    if (trend == "decreasing") return Icons.trending_down;
+    return Icons.trending_flat;
+  }
 
-    for (int i = 0; i < history.length; i++) {
-      final value = history[i][field];
-      if (value != null && value is num) {
-        spots.add(FlSpot(i.toDouble(), value.toDouble()));
-      }
+  // 🔥 ONLY LAST 5 DATA POINTS
+  List<FlSpot> buildChartData() {
+    List<FlSpot> spots = [];
+
+    int start = history.length > 5 ? history.length - 5 : 0;
+
+    for (int i = start; i < history.length; i++) {
+      final item = history[i];
+      double value = (item["confidence"] ?? 0).toDouble();
+      spots.add(FlSpot((i - start).toDouble(), value));
     }
 
     return spots;
   }
 
-  double getMinY(List<FlSpot> spots) {
-    if (spots.isEmpty) return 0;
-    double min = spots.first.y;
-    for (final spot in spots) {
-      if (spot.y < min) min = spot.y;
+  String _humaniseTrend(String raw) {
+    switch (raw.toLowerCase()) {
+      case "insufficient_data":
+        return "Insufficient Data";
+      case "increasing":
+        return "Increasing";
+      case "slightly_increasing":
+        return "Slightly Increasing";
+      case "decreasing":
+        return "Decreasing";
+      case "stable":
+        return "Stable";
+      default:
+        return raw
+            .replaceAll("_", " ")
+            .split(" ")
+            .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+            .join(" ");
     }
-    return min - 5;
-  }
-
-  double getMaxY(List<FlSpot> spots) {
-    if (spots.isEmpty) return 10;
-    double max = spots.first.y;
-    for (final spot in spots) {
-      if (spot.y > max) max = spot.y;
-    }
-    return max + 5;
-  }
-
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Text(
-        value.toInt().toString(),
-        style: const TextStyle(fontSize: 10),
-      ),
-    );
-  }
-
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    return Text(
-      value.toInt().toString(),
-      style: const TextStyle(fontSize: 10),
-    );
-  }
-
-  Widget buildChart(String title, String field) {
-    final spots = buildSpots(field);
-
-    if (spots.isEmpty) {
-      return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Center(child: Text("No data to display")),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 220,
-              child: LineChart(
-                LineChartData(
-                  minX: 0,
-                  maxX: (spots.length - 1).toDouble(),
-                  minY: getMinY(spots),
-                  maxY: getMaxY(spots),
-                  gridData: const FlGridData(show: true),
-                  borderData: FlBorderData(show: true),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 36,
-                        interval: ((getMaxY(spots) - getMinY(spots)) / 4).clamp(1, double.infinity),
-                        getTitlesWidget: leftTitleWidgets,
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        interval: 1,
-                        getTitlesWidget: bottomTitleWidgets,
-                      ),
-                    ),
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      barWidth: 3,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "X-axis: record order   |   Y-axis: measured value",
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final trend = forecast["trend"] ?? "stable";
+    final details = forecast["details"] ?? {};
+
+    // Gate: need at least 3 records for meaningful trend analysis
+    final bool hasEnoughData = history.length >= 3 &&
+        trend.toString().toLowerCase() != "insufficient_data";
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F0FF),
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
               colors: [Color(0xFF2B80FF), Color(0xFFAC46FF)],
             ),
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
           ),
         ),
-        title: const Text(
-          "Trends",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        title: const Text("Trends",
+            style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -216,81 +97,422 @@ class _TrendsScreenState extends State<TrendsScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40),
             ),
-            Expanded(
-              child: Image.asset('assets/logo.png', fit: BoxFit.contain),
-            ),
+            Expanded(child: Image.asset('assets/logo.png')),
           ],
         ),
-        actions: [
-          Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color(0xFFAC46FF),
-            ),
-            child: DropdownButton<String>(
-              value: period,
-              underline: const SizedBox(),
-              iconEnabledColor: Colors.white,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              items: const [
-                DropdownMenuItem(value: "weekly", child: Text("Weekly")),
-                DropdownMenuItem(value: "monthly", child: Text("Monthly")),
-              ],
-              onChanged: (val) {
-                if (val == null) return;
-                setState(() => period = val);
-                loadHistory();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-        ],
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMsg != null
-              ? Center(child: Text(errorMsg!))
-              : history.isEmpty
-                  ? const Center(child: Text("No history data found"))
-                  : Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: ListView(
+
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+
+            // ── INSUFFICIENT DATA STATE ──────────────────────────────
+            if (!hasEnoughData) ...[
+              const SizedBox(height: 30),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.bar_chart_outlined,
+                        size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Insufficient Data",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "At least 3 health records are needed to generate a meaningful trend analysis.\n\n"
+                      "You currently have ${history.length} record${history.length == 1 ? '' : 's'}. "
+                      "Complete more health checks to unlock trend insights.",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey, fontSize: 14, height: 1.5),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2B80FF).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Card(
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    "Risk Trend",
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    history.last["forecast"]?["trend"] ?? "No trend data",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: (history.last["forecast"]?["trend"] == "increasing")
-                                          ? Colors.red
-                                          : Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          const Icon(Icons.info_outline,
+                              color: Color(0xFF2B80FF), size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            "${3 - history.length} more record${(3 - history.length) == 1 ? '' : 's'} needed",
+                            style: const TextStyle(
+                              color: Color(0xFF2B80FF),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          buildChart("Systolic BP", "SystolicBP"),
-                          buildChart("Diastolic BP", "DiastolicBP"),
-                          buildChart("Blood Sugar (BS)", "BS"),
-                          buildChart("Body Temperature", "BodyTemp"),
-                          buildChart("Heart Rate", "HeartRate"),
                         ],
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ],
+
+            // ── FULL TREND VIEW (3+ records) ─────────────────────────
+            if (hasEnoughData) ...[
+
+            // 🔥 TREND SUMMARY
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: getTrendColor(trend).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Icon(getTrendIcon(trend),
+                      size: 40,
+                      color: getTrendColor(trend)),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    _humaniseTrend(trend),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: getTrendColor(trend),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(getTrendText(trend)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // 🔥 AI INSIGHT BOX
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.psychology, color: Colors.deepPurple),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      trend == "increasing"
+                          ? "Your recent readings show an upward trend. Please monitor closely."
+                          : trend == "decreasing"
+                              ? "Your health indicators are improving. Keep it up!"
+                              : "Your health condition remains stable over time.",
+                    ),
+                  )
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // 🔥 CHART TITLE
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Health Trend Over Time",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Based on your latest records",
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "X: Time (recent records)   Y: Health Score",
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 🔥 LINE CHART
+            SizedBox(
+              height: 280,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) {
+                            if (value % 1 != 0) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                "Day ${value.toInt() + 1}",
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                          getTitlesWidget: (value, meta) {
+                            if (value % 1 != 0) return const SizedBox.shrink();
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10),
+                            );
+                          },
+                        ),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (spot) => const Color(0xFF1A0033),
+                        tooltipRoundedRadius: 10,
+                        tooltipPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        fitInsideVertically: true,
+                        fitInsideHorizontally: true,
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              "Score: ${spot.y.toStringAsFixed(1)}",
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: buildChartData(),
+                        isCurved: true,
+                        color: Colors.deepPurple,
+                        barWidth: 3,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, bar, index) {
+                            return FlDotCirclePainter(
+                              radius: 6,
+                              color: const Color(0xFF7C3AED),
+                              strokeWidth: 2.5,
+                              strokeColor: Colors.white,
+                            );
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Graph description
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Health Score is calculated using BP, Blood Sugar, Heart Rate, and Body Temperature.",
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                  height: 1.5,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 🔥 LEGEND
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.circle, size: 8, color: Color(0xFF7C3AED)),
+                SizedBox(width: 6),
+                Text("Health Score Trend Line", style: TextStyle(fontSize: 12)),
+              ],
+            ),
+
+            const SizedBox(height: 15),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                getTrendText(trend),
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "Note: The trend is calculated using overall pattern, not just the last value.",
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // 🔥 PARAMETER DETAILS
+            buildTile("Blood Pressure", details["blood_pressure"]),
+            buildTile("Blood Sugar", details["blood_sugar"]),
+            buildTile("Heart Rate", details["heart_rate"]),
+
+            const SizedBox(height: 15),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                buildSummary(details),
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+
+            ], // end hasEnoughData block
+          ],
+        ),
+      ),
+      ),
+    );
+  }
+
+  String buildSummary(Map details) {
+    List<String> msgs = [];
+
+    if (details["blood_pressure"] == "increasing") {
+      msgs.add("Blood pressure is rising.");
+    }
+
+    if (details["blood_sugar"] == "increasing") {
+      msgs.add("Blood sugar is increasing.");
+    }
+
+    if (details["heart_rate"] == "increasing") {
+      msgs.add("Heart rate is elevated.");
+    }
+
+    if (msgs.isEmpty) {
+      return "All health indicators are stable.";
+    }
+
+    return msgs.join(" ") + " Please monitor closely.";
+  }
+
+  Widget buildTile(String title, String? value) {
+    Color color;
+    IconData icon;
+
+    if (value == "increasing") {
+      color = Colors.red;
+      icon = Icons.trending_up;
+    } else if (value == "decreasing") {
+      color = Colors.green;
+      icon = Icons.trending_down;
+    } else {
+      color = Colors.orange;
+      icon = Icons.trending_flat;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.2),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title)),
+          Text(
+            (value ?? "-").toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
