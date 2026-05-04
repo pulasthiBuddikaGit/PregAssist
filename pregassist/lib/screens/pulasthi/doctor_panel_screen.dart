@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../main.dart'; // AuthLocal
+import '../../utils/critical_alert_state.dart';
 
 class DoctorPanelScreen extends StatelessWidget {
   const DoctorPanelScreen({super.key});
@@ -162,16 +163,42 @@ class DoctorPanelScreen extends StatelessWidget {
                         ),
                         onTap: () => _notAvailable(context, "Medical Reports"),
                       ),
-                      _FeatureTile(
-                        title: "Notifications",
-                        subtitle: "Patient physical health alerts",
-                        icon: Icons.notifications_active,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF00B894), Color(0xFF0984E3)],
-                        ),
-                        onTap: () => _openNotifications(context),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: criticalAlertState,
+                        builder: (context, hasUnreadCriticalAlert, _) {
+                          return Stack(
+                            fit: StackFit.expand,
+                            clipBehavior: Clip.none,
+                            children: [
+                              _FeatureTile(
+                                title: "Notifications",
+                                subtitle: "Patient physical health alerts",
+                                icon: Icons.notifications_active,
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF00B894), Color(0xFF0984E3)],
+                                ),
+                                onTap: () => _openNotifications(context),
+                              ),
+                              if (hasUnreadCriticalAlert)
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    width: 13,
+                                    height: 13,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                       _FeatureTile(
                         title: "Logout",
