@@ -66,7 +66,7 @@ class ForecastScreen extends StatelessWidget {
         child: Column(
           children: [
 
-            // 🔥 TREND CARD
+            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -117,7 +117,7 @@ class ForecastScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 🔥 MESSAGE
+            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -141,7 +141,7 @@ class ForecastScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 🔥 PARAMETER CARDS
+            
             buildTile("Blood Pressure", details['blood_pressure'], Icons.favorite),
             buildTile("Blood Sugar", details['blood_sugar'], Icons.water_drop),
             buildTile("Heart Rate", details['heart_rate'], Icons.monitor_heart),

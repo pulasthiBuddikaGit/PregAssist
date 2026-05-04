@@ -110,13 +110,14 @@ class _CriticalAlertsScreenState extends State<CriticalAlertsScreen> {
       );
     }
 
+    final limitedAlerts = _alerts.take(3).toList();
     return RefreshIndicator(
       onRefresh: _fetchAlerts,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _alerts.length,
+        itemCount: limitedAlerts.length,
         itemBuilder: (context, index) {
-          final alert = _alerts[index];
+          final alert = limitedAlerts[index];
           final motherId = "M001";
           final dateStr = alert['createdAt'] != null
               ? _formatDate(alert['createdAt'])

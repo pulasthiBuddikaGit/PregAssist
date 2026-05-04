@@ -17,143 +17,147 @@ class DoctorNotificationsNavigationScreen extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: criticalAlertState,
       builder: (context, hasUnreadCriticalAlert, _) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFEFF6FF),
-            Color(0xFFFAF5FF),
-            Color(0xFFDBEAFE),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2B80FF),
-                  Color(0xFFAC46FF),
-                ],
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
-            ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
-            'Notifications',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.75),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.notifications_active,
-                          color: Color(0xFF2B80FF), size: 28),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Doctor Notification Navigation',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'Choose a notification section',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _NotificationNavTile(
-                        title: 'Critical Alerts',
-                        subtitle: 'High-priority patient health notifications',
-                        icon: Icons.warning_amber_rounded,
-                        color: const Color(0xFFFF5F6D),
-                        showBadge: hasUnreadCriticalAlert,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const CriticalAlertsScreen()),
-                          );
-                        },
-                      ),
-                      _NotificationNavTile(
-                        title: 'Vitals Watchlist',
-                        subtitle: 'Track incoming physical health signals',
-                        icon: Icons.monitor_heart,
-                        color: const Color(0xFF00B894),
-                        showBadge: false,
-                        onTap: () =>
-                            _showComingSoon(context, 'Vitals Watchlist'),
-                      ),
-                      _NotificationNavTile(
-                        title: 'Medication Reminders',
-                        subtitle: 'Upcoming medication and treatment reminders',
-                        icon: Icons.medical_services_outlined,
-                        color: const Color(0xFF2B80FF),
-                        showBadge: false,
-                        onTap: () =>
-                            _showComingSoon(context, 'Medication Reminders'),
-                      ),
-                      _NotificationNavTile(
-                        title: 'All Notifications',
-                        subtitle: 'Open full list of doctor notifications',
-                        icon: Icons.notifications_none,
-                        color: const Color(0xFF7D5FFF),
-                        showBadge: false,
-                        onTap: () =>
-                            _showComingSoon(context, 'All Notifications'),
-                      ),
-                    ],
-                  ),
-                ),
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFEFF6FF),
+                Color(0xFFFAF5FF),
+                Color(0xFFDBEAFE),
               ],
+              stops: [0.0, 0.5, 1.0],
             ),
           ),
-        ),
-      ),
-    );
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF2B80FF),
+                      Color(0xFFAC46FF),
+                    ],
+                  ),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(25)),
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: const Text(
+                'Notifications',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 12,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.notifications_active,
+                              color: Color(0xFF2B80FF), size: 28),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Doctor Notification Navigation',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Choose a notification section',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          _NotificationNavTile(
+                            title: 'Critical Alerts',
+                            subtitle:
+                                'High-priority patient health notifications',
+                            icon: Icons.warning_amber_rounded,
+                            color: const Color(0xFFFF5F6D),
+                            showBadge: hasUnreadCriticalAlert,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CriticalAlertsScreen()),
+                              );
+                            },
+                          ),
+                          _NotificationNavTile(
+                            title: 'Vitals Watchlist',
+                            subtitle: 'Track incoming physical health signals',
+                            icon: Icons.monitor_heart,
+                            color: const Color(0xFF00B894),
+                            showBadge: false,
+                            onTap: () =>
+                                _showComingSoon(context, 'Vitals Watchlist'),
+                          ),
+                          _NotificationNavTile(
+                            title: 'Medication Reminders',
+                            subtitle:
+                                'Upcoming medication and treatment reminders',
+                            icon: Icons.medical_services_outlined,
+                            color: const Color(0xFF2B80FF),
+                            showBadge: false,
+                            onTap: () => _showComingSoon(
+                                context, 'Medication Reminders'),
+                          ),
+                          _NotificationNavTile(
+                            title: 'All Notifications',
+                            subtitle: 'Open full list of doctor notifications',
+                            icon: Icons.notifications_none,
+                            color: const Color(0xFF7D5FFF),
+                            showBadge: false,
+                            onTap: () =>
+                                _showComingSoon(context, 'All Notifications'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
       },
     );
   }
@@ -204,7 +208,7 @@ class _NotificationNavTile extends StatelessWidget {
                       child: Icon(icon, color: color),
                     ),
 
-                    // 🔴 RED DOT — only when showBadge is true
+                    
                     if (showBadge)
                       Positioned(
                         right: 2,

@@ -42,17 +42,17 @@ class _AdviceScreenState extends State<AdviceScreen> {
   Future speakAllAdvice() async {
     await tts.stop();
 
-    // 🔥 Intro
+    
     await tts.speak("Here is your personalized care advice.");
 
     for (String advice in widget.adviceList) {
-      await tts.speak(advice); // now waits automatically
+      await tts.speak(advice);
     }
   }
 
   @override
   void dispose() {
-    tts.stop(); // stop when leaving screen
+    tts.stop(); 
     super.dispose();
   }
 
